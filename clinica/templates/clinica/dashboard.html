@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Painel da Clínica</title>
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+</head>
+
+<body class="bg-light">
+
+<div class="container mt-4">
+
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h2>Clínica: {{ clinica.nome }}</h2>
+            <p class="mb-0">Usuário: {{ user.username }}</p>
+        </div>
+
+        <a href="{% url 'clinica_logout' %}" class="btn btn-danger btn-sm">
+            Sair
+        </a>
+    </div>
+
+    <hr>
+    <!-- 📲 WHATSAPP LIMITE -->
+    <div class="mt-4">
+        {% if whatsapp_limite %}
+            {% if whatsapp_usados >= whatsapp_limite %}
+                <div class="alert alert-danger">
+                    ⚠️ Limite de WhatsApp atingido ({{ whatsapp_usados }}/{{ whatsapp_limite }})
+                </div>
+            {% else %}
+                <div class="alert alert-info">
+                    📲 WhatsApp: {{ whatsapp_usados }} / {{ whatsapp_limite }} mensagens usadas
+                </div>
+            {% endif %}
+        {% else %}
+            <div class="alert alert-success">
+                📲 WhatsApp ilimitado
+            </div>
+        {% endif %}
+    </div>
+    <a href="{% url 'relatorio_agendamentos_csv' %}"
+        class="btn btn-outline-secondary btn-sm mt-3">
+        📄 Exportar Agendamentos (CSV)
+    </a>
+    <a href="{% url 'relatorio_agendamentos_pdf' %}"
+        class="btn btn-outline-danger btn-sm mt-2">
+            🖨️ Exportar Agendamentos (PDF)
+    </a>
+
+
+    <!-- 🟢 AGENDAMENTOS DE HOJE -->
+    <h4 class="text-success">🟢 Agendamentos de Hoje</h4>
+
+    {% if agendamentos_hoje %}
+    <table class="table table-striped table-bordered mt-2">
+        <thead class="table-success">
+            <tr>
+                <th>Horário</th>
+                <th>Paciente</th>
+                <th>Telefone</th>
+                <th>Serviço</th>
+                <th>Profissional</th>
+                <th width="180">Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for a in agendamentos_hoje %}
+            <tr>
+                <td>{{ a.horario|time:"H:i" }}</td>
+                <td>{{ a.paciente.nome }}</td>
+                <td>
+                    <a href="https://wa.me/55{{ a.paciente.telefone|cut:'('|cut:')'|cut:' '|cut:'-' }}"
+                       target="_blank"
+                       class="text-success text-decoration-none">
+                        {{ a.paciente.telefone }}
+                    </a>
+                </td>
+                <td>{{ a.servico }}</td>
+                <td>{{ a.profissional }}</td>
+                <td>
+                    <a href="{% url 'agendamento_edit' a.id %}"
+                       class="btn btn-sm btn-warning">
+                        Editar
+                    </a>
+
+                    <form action="{% url 'agendamento_delete' a.id %}"
+                          method="post"
+                          style="display:inline;"
+                          onsubmit="return confirm('Deseja realmente excluir este agendamento?')">
+                        {% csrf_token %}
+                        <button class="btn btn-sm btn-danger">
+                            Excluir
+                        </button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+        <p class="text-muted">Nenhum agendamento para hoje.</p>
+    {% endif %}
+
+    <!-- 🔵 AGENDAMENTOS DE AMANHÃ -->
+    <h4 class="mt-5 text-primary">🔵 Agendamentos de Amanhã</h4>
+
+    {% if agendamentos_amanha %}
+    <table class="table table-striped table-bordered mt-2">
+        <thead class="table-primary">
+            <tr>
+                <th>Horário</th>
+                <th>Paciente</th>
+                <th>Telefone</th>
+                <th>Serviço</th>
+                <th>Profissional</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for a in agendamentos_amanha %}
+            <tr>
+                <td>{{ a.horario|time:"H:i" }}</td>
+                <td>{{ a.paciente.nome }}</td>
+                <td>
+                    <a href="https://wa.me/55{{ a.paciente.telefone|cut:'('|cut:')'|cut:' '|cut:'-' }}"
+                       target="_blank"
+                       class="text-success text-decoration-none">
+                        {{ a.paciente.telefone }}
+                    </a>
+                </td>
+                <td>{{ a.servico }}</td>
+                <td>{{ a.profissional }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+        <p class="text-muted">Nenhum agendamento para amanhã.</p>
+    {% endif %}
+
+    <!-- 📋 LISTA GERAL -->
+    <h4 class="mt-5">📋 Todos os Agendamentos</h4>
+
+    {% if agendamentos %}
+    <table class="table table-striped table-bordered mt-2">
+        <thead>
+            <tr>
+                <th>Data</th>
+                <th>Horário</th>
+                <th>Paciente</th>
+                <th>Telefone</th>
+                <th>Serviço</th>
+                <th>Profissional</th>
+                <th width="180">Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for a in agendamentos %}
+            <tr>
+                <td>{{ a.data|date:"d/m/Y" }}</td>
+                <td>{{ a.horario|time:"H:i" }}</td>
+                <td>{{ a.paciente.nome }}</td>
+                <td>
+                    <a href="https://wa.me/55{{ a.paciente.telefone|cut:'('|cut:')'|cut:' '|cut:'-' }}"
+                       target="_blank"
+                       class="text-success text-decoration-none">
+                        {{ a.paciente.telefone }}
+                    </a>
+                </td>
+                <td>{{ a.servico }}</td>
+                <td>{{ a.profissional }}</td>
+                <td>
+                    {% if a.data >= today %}
+                        <a href="{% url 'agendamento_edit' a.id %}"
+                           class="btn btn-sm btn-warning">
+                            Editar
+                        </a>
+
+                        <form action="{% url 'agendamento_delete' a.id %}"
+                              method="post"
+                              style="display:inline;"
+                              onsubmit="return confirm('Deseja realmente excluir este agendamento?')">
+                            {% csrf_token %}
+                            <button class="btn btn-sm btn-danger">
+                                Excluir
+                            </button>
+                        </form>
+                    {% else %}
+                        <button class="btn btn-sm btn-warning" disabled>Editar</button>
+                        <button class="btn btn-sm btn-danger" disabled>Excluir</button>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+        <p class="text-muted">Nenhum agendamento ainda.</p>
+    {% endif %}
+
+   
+
+    <!-- 🔗 AÇÕES -->
+    <div class="mt-3">
+        <a href="{% url 'disponibilidade_create' %}" class="btn btn-outline-success">
+            Incluir disponibilidade
+        </a>
+
+        <a href="{% url 'disponibilidade_list' %}" class="btn btn-outline-primary">
+            Ver disponibilidades
+        </a>
+    </div>
+
+</div>
+
+</body>
+</html>

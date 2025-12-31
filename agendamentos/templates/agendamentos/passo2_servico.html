@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Agendar - Escolher Serviço</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+</head>
+<body class="bg-light">
+
+<div class="container mt-5 col-md-6">
+    <h3 class="text-center mb-4">Escolha o serviço</h3>
+
+    <form method="POST" class="card p-4 shadow">
+        {% csrf_token %}
+
+        <label class="form-label">Serviço:</label>
+        <select name="servico_id" class="form-select" required>
+            {% for servico in servicos %}
+                <option value="{{ servico.id }}">
+                    {{ servico.nome }} — {{ servico.duracao_minutos }}min
+                </option>
+            {% endfor %}
+        </select>
+
+        <button class="btn btn-primary w-100 mt-3">Próximo</button>
+    </form>
+
+    <!-- Botão para voltar ao início do agendamento -->
+    <a href="{% url 'passo1_telefone' clinica.slug %}" class="btn btn-link mt-3">
+        Voltar ao início
+    </a>
+</div>
+
+</body>
+</html>

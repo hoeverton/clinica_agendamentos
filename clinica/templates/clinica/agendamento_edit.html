@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Editar Agendamento</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" 
+          rel="stylesheet">
+</head>
+<body class="bg-light">
+
+<div class="container mt-5">
+
+    <!-- TÍTULO -->
+    <div class="row mb-4">
+        <div class="col">
+            <h3>✏️ Editar Agendamento</h3>
+            <p class="text-muted">
+                Paciente: <strong>{{ agendamento.paciente }}</strong><br>
+                Profissional: <strong>{{ agendamento.profissional }}</strong>
+            </p>
+        </div>
+    </div>
+
+    <!-- MENSAGENS -->
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <!-- FORMULÁRIO -->
+    <div class="card shadow-sm">
+        <div class="card-body">
+
+            <form method="post">
+                {% csrf_token %}
+
+                <!-- DATA -->
+                <div class="mb-3">
+                    <label class="form-label">📅 Data</label>
+                    <input type="date"
+                           name="data"
+                           class="form-control"
+                           value="{{ agendamento.data|date:'Y-m-d' }}"
+                           required>
+                </div>
+
+                <!-- HORÁRIO -->
+                <div class="mb-3">
+                    <label class="form-label">⏰ Horário</label>
+                    <input type="time"
+                           name="horario"
+                           class="form-control"
+                           value="{{ agendamento.horario|time:'H:i' }}"
+                           required>
+                </div>
+
+                <!-- BOTÕES -->
+                <div class="d-flex justify-content-between mt-4">
+                    <a href="{% url 'clinica_dashboard' %}"
+                       class="btn btn-outline-secondary">
+                        ⬅ Voltar
+                    </a>
+
+                    <button type="submit"
+                            class="btn btn-success">
+                        💾 Salvar Alterações
+                    </button>
+                </div>
+
+            </form>
+
+        </div>
+    </div>
+
+</div>
+
+</body>
+</html>

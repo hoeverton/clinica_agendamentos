@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Relatório de Agendamentos</title>
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+
+    <style>
+        @media print {
+            .no-print {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body class="bg-light">
+
+<div class="container mt-4">
+
+    <div class="d-flex justify-content-between align-items-center no-print">
+        <h3>📊 Relatório de Agendamentos</h3>
+        <button onclick="window.print()" class="btn btn-outline-dark">
+            🖨️ Imprimir / Salvar PDF
+        </button>
+    </div>
+
+    <p class="mt-2">
+        <strong>Clínica:</strong> {{ clinica.nome }} <br>
+        <strong>Gerado em:</strong> {{ hoje|date:"d/m/Y" }}
+    </p>
+
+    <!-- Filtros -->
+    <form method="get" class="row g-3 no-print mb-3">
+        <div class="col-md-3">
+            <label>Data início</label>
+            <input type="date" name="data_inicio" class="form-control"
+                   value="{{ data_inicio }}">
+        </div>
+
+        <div class="col-md-3">
+            <label>Data fim</label>
+            <input type="date" name="data_fim" class="form-control"
+                   value="{{ data_fim }}">
+        </div>
+
+        <div class="col-md-3 d-flex align-items-end">
+            <button class="btn btn-primary me-2">Filtrar</button>
+            <a href="{% url 'relatorio_agendamentos_html' %}"
+               class="btn btn-outline-secondary">
+                Limpar
+            </a>
+        </div>
+    </form>
+
+    <!-- Tabela -->
+    <table class="table table-bordered table-striped">
+        <thead class="table-light">
+        <tr>
+            <th>Data</th>
+            <th>Horário</th>
+            <th>Paciente</th>
+            <th>Telefone</th>
+            <th>Serviço</th>
+            <th>Profissional</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for a in agendamentos %}
+            <tr>
+                <td>{{ a.data|date:"d/m/Y" }}</td>
+                <td>{{ a.horario|time:"H:i" }}</td>
+                <td>{{ a.paciente.nome }}</td>
+                <td>{{ a.paciente.telefone }}</td>
+                <td>{{ a.servico }}</td>
+                <td>{{ a.profissional }}</td>
+            </tr>
+        {% empty %}
+            <tr>
+                <td colspan="6" class="text-center">
+                    Nenhum agendamento encontrado
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+</div>
+
+</body>
+</html>

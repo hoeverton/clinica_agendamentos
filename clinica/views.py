@@ -611,3 +611,31 @@ def relatorio_agendamentos_pdf(request):
 
     return response
 
+@login_required
+def relatorio_agendamentos_html(request):
+    clinica = Clinica.objects.get(user=request.user)
+
+    data_inicio = request.GET.get("data_inicio")
+    data_fim = request.GET.get("data_fim")
+
+    agendamentos = Agendamento.objects.filter(
+        clinica=clinica
+    ).select_related(
+        "paciente",
+        "profissional",
+        "servico"
+    ).order_by("data", "horario")
+
+    if data_inicio:
+        agendamentos = agendamentos.filter(data__gte=data_inicio)
+
+    if data_fim:
+        agendamentos = agendamentos.filter(data__lte=data_fim)
+
+    return render(request, "clinica/relatorios/agendamentos.html", {
+        "clinica": clinica,
+        "agendamentos": agendamentos,
+        "data_inicio": data_inicio,
+        "data_fim": data_fim,
+        "hoje": timezone.now().date()
+    })

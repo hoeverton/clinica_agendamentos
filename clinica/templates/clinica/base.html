@@ -28,6 +28,12 @@
         .sidebar a:hover {
             background-color: #e9ecef;
         }
+        input[type="password"] {
+        width: 100%;
+        padding: 0.375rem 0.75rem;
+        border: 1px solid #ced4da;
+        border-radius: 0.375rem;
+    }
     </style>
 </head>
 <body>
@@ -36,7 +42,9 @@
 
     <!-- MENU LATERAL -->
     <aside class="sidebar p-3">
-        <h5 class="mb-4">🏥 Clínica</h5>
+        <h5 class="mb-1">🏥 {{ clinica.nome }}</h5>
+        <small class="text-muted">Clínica ativa</small>
+
 
         <ul class="nav nav-pills flex-column gap-1">
 
@@ -63,10 +71,8 @@
 
             <hr class="my-3">
 
-            <!-- FUTURO -->
             <li class="nav-item">
-                <a href="#"
-                   class="nav-link disabled">
+                <a href="{% url 'minha_conta' %}" class="nav-link">
                     👤 Minha Conta
                 </a>
             </li>

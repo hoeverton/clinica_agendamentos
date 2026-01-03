@@ -1,0 +1,114 @@
+{% extends "clinica/base.html" %}
+
+{% block title %}Minha Conta{% endblock %}
+
+{% block content %}
+
+<h3 class="mb-4">👤 Minha Conta</h3>
+
+<div class="row">
+
+    <!-- DADOS DA CLÍNICA -->
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header">
+                🏥 Dados da Clínica
+            </div>
+            <div class="card-body">
+                <p><strong>Nome:</strong> {{ clinica.nome }}</p>
+                <p><strong>Usuário:</strong> {{ user.username }}</p>
+                <p><strong>E-mail:</strong> {{ user.email|default:"Não informado" }}</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- PLANO -->
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between">
+                <span>💳 Plano Contratado</span>
+                <button class="btn btn-sm btn-outline-secondary" disabled>
+                    Alterar plano
+                </button>
+            </div>
+            <div class="card-body">
+
+                {% if clinica.plano %}
+                    <p><strong>Plano:</strong> {{ clinica.plano.nome }}</p>
+                    <p><strong>Preço:</strong> R$ {{ clinica.plano.preco }}</p>
+
+                    {% if whatsapp_limite %}
+                        <p class="mb-1">
+                            <strong>WhatsApp:</strong>
+                            {{ whatsapp_usados }} / {{ whatsapp_limite }} mensagens
+                        </p>
+
+                        <div class="progress mb-2" style="height: 20px;">
+                            <div class="progress-bar
+                                {% if whatsapp_percentual >= 100 %}
+                                    bg-danger
+                                {% elif whatsapp_percentual >= 80 %}
+                                    bg-warning
+                                {% else %}
+                                    bg-success
+                                {% endif %}"
+                                role="progressbar"
+                                style="width: {{ whatsapp_percentual }}%;"
+                                aria-valuenow="{{ whatsapp_percentual }}"
+                                aria-valuemin="0"
+                                aria-valuemax="100">
+                                {{ whatsapp_percentual }}%
+                            </div>
+                        </div>
+
+                        {% if whatsapp_percentual >= 100 %}
+                            <small class="text-danger">
+                                ⚠️ Limite de WhatsApp atingido
+                            </small>
+                        {% elif whatsapp_percentual >= 80 %}
+                            <small class="text-warning">
+                                ⚠️ Você está próximo do limite
+                            </small>
+                        {% else %}
+                            <small class="text-muted">
+                                Uso normal
+                            </small>
+                        {% endif %}
+
+                    {% else %}
+                        <div class="alert alert-success">
+                            📲 WhatsApp ilimitado
+                        </div>
+                    {% endif %}
+
+                {% else %}
+                    <p class="text-muted">Nenhum plano associado.</p>
+                {% endif %}
+
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- CONTA DO USUÁRIO -->
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                🔐 Conta do Usuário
+            </div>
+            <div class="card-body">
+                <p><strong>Login:</strong> {{ user.username }}</p>
+                <p><strong>E-mail:</strong> {{ user.email|default:"Não informado" }}</p>
+
+                <a href="{% url 'password_change' %}"
+                   class="btn btn-outline-primary btn-sm">
+                    Alterar senha
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

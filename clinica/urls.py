@@ -1,6 +1,8 @@
 from django.urls import path
-from .views import ClinicaLoginView, clinica_logout, disponibilidade_create, disponibilidade_list, disponibilidade_delete, disponibilidade_edit, agendamento_delete, agendamento_edit
+from .views import ClinicaLoginView, clinica_logout, disponibilidade_create, disponibilidade_list, disponibilidade_delete, disponibilidade_edit, agendamento_delete, agendamento_edit, minha_conta
 from clinica.views import ClinicaDashboardView, relatorio_agendamentos_csv, relatorio_agendamentos_pdf, relatorio_agendamentos_html
+
+
 
 urlpatterns = [
     path("login/", ClinicaLoginView.as_view(), name="clinica_login"),
@@ -16,8 +18,9 @@ urlpatterns = [
     path("agendamento/<int:pk>/excluir/", agendamento_delete,name="agendamento_delete"),
     path("relatorios/agendamentos/csv/",relatorio_agendamentos_csv,name="relatorio_agendamentos_csv"),
     path("relatorios/agendamentos/pdf/",relatorio_agendamentos_pdf,name="relatorio_agendamentos_pdf"),
-    path("relatorios/agendamentos/",relatorio_agendamentos_html,name="relatorio_agendamentos_html"
-),
+    path("relatorios/agendamentos/",relatorio_agendamentos_html,name="relatorio_agendamentos_html"),       
+    path("minha-conta/", minha_conta, name="minha_conta"),
+    
 
     
 ]

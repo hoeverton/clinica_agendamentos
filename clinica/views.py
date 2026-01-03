@@ -662,3 +662,29 @@ def relatorio_agendamentos_html(request):
         "data_fim": data_fim,
         "hoje": timezone.now().date()
     })
+
+@login_required
+def minha_conta(request):
+    clinica = Clinica.objects.filter(user=request.user).first()
+    agora = timezone.now()
+
+    whatsapp_usados = WhatsappLog.objects.filter(
+        clinica=clinica,
+        data__month=agora.month,
+        data__year=agora.year
+    ).count() if clinica else 0
+
+    whatsapp_limite = None
+    whatsapp_percentual = 0
+
+    if clinica and clinica.plano:
+        if clinica.plano.max_whatsapp_mes is not None:
+            whatsapp_limite = clinica.plano.max_whatsapp_mes + clinica.whatsapp_extra
+            if whatsapp_limite > 0:
+                whatsapp_percentual = int((whatsapp_usados / whatsapp_limite) * 100)
+
+    return render(request, "clinica/minha_conta.html", {
+        "whatsapp_usados": whatsapp_usados,
+        "whatsapp_limite": whatsapp_limite,
+        "whatsapp_percentual": whatsapp_percentual,
+    })

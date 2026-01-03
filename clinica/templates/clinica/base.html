@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}Clínica{% endblock %}</title>
+
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+
+    <style>
+        body {
+            min-height: 100vh;
+        }
+        .sidebar {
+            width: 240px;
+            min-height: 100vh;
+            background-color: #f8f9fa;
+            border-right: 1px solid #dee2e6;
+        }
+        .sidebar a {
+            text-decoration: none;
+            color: #333;
+        }
+        .sidebar a.nav-link.active {
+            background-color: #e9ecef;
+            font-weight: 500;
+        }
+        .sidebar a:hover {
+            background-color: #e9ecef;
+        }
+    </style>
+</head>
+<body>
+
+<div class="d-flex">
+
+    <!-- MENU LATERAL -->
+    <aside class="sidebar p-3">
+        <h5 class="mb-4">🏥 Clínica</h5>
+
+        <ul class="nav nav-pills flex-column gap-1">
+
+            <li class="nav-item">
+                <a href="{% url 'clinica_dashboard' %}"
+                   class="nav-link">
+                    🏠 Dashboard
+                </a>
+            </li>
+
+            <li class="nav-item">
+                <a href="{% url 'relatorio_agendamentos_html' %}"
+                   class="nav-link">
+                    📊 Relatórios
+                </a>
+            </li>
+
+            <li class="nav-item">
+                <a href="{% url 'disponibilidade_list' %}"
+                   class="nav-link">
+                    📅 Disponibilidades
+                </a>
+            </li>
+
+            <hr class="my-3">
+
+            <!-- FUTURO -->
+            <li class="nav-item">
+                <a href="#"
+                   class="nav-link disabled">
+                    👤 Minha Conta
+                </a>
+            </li>
+
+            <li class="nav-item mt-2">
+                <a href="{% url 'clinica_logout' %}"
+                   class="nav-link text-danger">
+                    🚪 Sair
+                </a>
+            </li>
+
+        </ul>
+    </aside>
+
+    <!-- CONTEÚDO PRINCIPAL -->
+    <main class="flex-grow-1 p-4 bg-light">
+        {% block content %}{% endblock %}
+    </main>
+
+</div>
+
+</body>
+</html>

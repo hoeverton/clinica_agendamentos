@@ -1,24 +1,20 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <title>Relatório de Agendamentos</title>
-    <link rel="stylesheet"
-          href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+{% extends "clinica/base.html" %}
 
-    <style>
-        @media print {
-            .no-print {
-                display: none;
-            }
+{% block title %}Relatório de Agendamentos{% endblock %}
+
+{% block content %}
+
+<style>
+    @media print {
+        .no-print {
+            display: none;
         }
-    </style>
-</head>
-<body class="bg-light">
+    }
+</style>
 
-<div class="container mt-4">
+<div class="container-fluid">
 
-    <div class="d-flex justify-content-between align-items-center no-print">
+    <div class="d-flex justify-content-between align-items-center no-print mb-3">
         <h3>📊 Relatório de Agendamentos</h3>
         <button onclick="window.print()" class="btn btn-outline-dark">
             🖨️ Imprimir / Salvar PDF
@@ -33,13 +29,13 @@
     <!-- Filtros -->
     <form method="get" class="row g-3 no-print mb-3">
         <div class="col-md-3">
-            <label>Data início</label>
+            <label class="form-label">Data início</label>
             <input type="date" name="data_inicio" class="form-control"
                    value="{{ data_inicio }}">
         </div>
 
         <div class="col-md-3">
-            <label>Data fim</label>
+            <label class="form-label">Data fim</label>
             <input type="date" name="data_fim" class="form-control"
                    value="{{ data_fim }}">
         </div>
@@ -87,5 +83,4 @@
 
 </div>
 
-</body>
-</html>
+{% endblock %}

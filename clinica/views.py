@@ -61,7 +61,7 @@ class ClinicaDashboardView(LoginRequiredMixin, TemplateView):
         # 3️⃣ Plano
         plano = clinica.plano if clinica else None
 
-        # 4️⃣ Data/hora atual
+        # 4️⃣ Datas
         agora = timezone.now()
         hoje = agora.date()
         amanha = hoje + timedelta(days=1)
@@ -74,7 +74,6 @@ class ClinicaDashboardView(LoginRequiredMixin, TemplateView):
         ).count()
 
         # 6️⃣ Limite WhatsApp
-        whatsapp_limite = None
         if plano and plano.max_whatsapp_mes is None:
             whatsapp_limite = None
         elif plano:
@@ -82,7 +81,7 @@ class ClinicaDashboardView(LoginRequiredMixin, TemplateView):
         else:
             whatsapp_limite = 0
 
-        # 7️⃣ TODOS os agendamentos (continua igual)
+        # 7️⃣ TODOS os agendamentos
         agendamentos = Agendamento.objects.filter(
             clinica__in=clinicas_do_usuario
         ).select_related(
@@ -92,20 +91,18 @@ class ClinicaDashboardView(LoginRequiredMixin, TemplateView):
             "servico"
         ).order_by("data", "horario")
 
-        # 🆕 8️⃣ AGENDAMENTOS DE HOJE
-        agendamentos_hoje = agendamentos.filter(
-            data=hoje
-        )
+        # 8️⃣ Regra única de edição (APLICA PARA TODOS)
+        for a in agendamentos:
+            a.pode_editar = a.data >= hoje
 
-        # 🆕 9️⃣ AGENDAMENTOS DE AMANHÃ
-        agendamentos_amanha = agendamentos.filter(
-            data=amanha
-        )
+        # 9️⃣ Sublistas (herdam a regra acima)
+        agendamentos_hoje = [a for a in agendamentos if a.data == hoje]
+        agendamentos_amanha = [a for a in agendamentos if a.data == amanha]
 
-        # 🔟 Envio para o template
+        # 🔟 Contexto
         context.update({
             "clinica": clinica,
-            "agendamentos": agendamentos,  # mantém
+            "agendamentos": agendamentos,
             "agendamentos_hoje": agendamentos_hoje,
             "agendamentos_amanha": agendamentos_amanha,
             "today": hoje,
@@ -114,6 +111,7 @@ class ClinicaDashboardView(LoginRequiredMixin, TemplateView):
         })
 
         return context
+
 
 
 

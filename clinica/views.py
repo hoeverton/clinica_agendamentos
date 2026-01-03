@@ -253,31 +253,55 @@ def disponibilidade_delete(request, pk):
 
 @login_required
 def disponibilidade_edit(request, pk):
-    clinica = Clinica.objects.get(user=request.user)
+    # 🔐 Clínica logada
+    clinica = get_object_or_404(Clinica, user=request.user)
 
-    disponibilidade = Disponibilidade.objects.get(
+    # 📅 Disponibilidade
+    disponibilidade = get_object_or_404(
+        Disponibilidade,
         pk=pk,
         clinica=clinica
     )
 
     profissionais = Profissional.objects.filter(clinica=clinica)
 
-    # 🔒 VERIFICAR SE EXISTE AGENDAMENTO FUTURO
+    # 🔒 VERIFICAR CONFLITO REAL DE AGENDAMENTO
     hoje = timezone.now().date()
 
-    existe_agendamento = Agendamento.objects.filter(
+    # 🔁 MAPEAMENTO CORRETO DO DIA DA SEMANA
+    # Disponibilidade:
+    # 0=Seg, 1=Ter, 2=Qua, 3=Qui, 4=Sex, 5=Sáb, 6=Dom
+    # Django week_day:
+    # 1=Dom, 2=Seg, 3=Ter, 4=Qua, 5=Qui, 6=Sex, 7=Sáb
+    MAPA_DIA_SEMANA = {
+        0: 2,  # Segunda
+        1: 3,  # Terça
+        2: 4,  # Quarta
+        3: 5,  # Quinta
+        4: 6,  # Sexta
+        5: 7,  # Sábado
+        6: 1,  # Domingo
+    }
+
+    django_week_day = MAPA_DIA_SEMANA[disponibilidade.dia_semana]
+
+    existe_conflito = Agendamento.objects.filter(
         clinica=clinica,
         profissional=disponibilidade.profissional,
         data__gte=hoje,
+        data__week_day=django_week_day,
+        horario__gte=disponibilidade.hora_inicio,
+        horario__lt=disponibilidade.hora_fim,
     ).exists()
 
-    if existe_agendamento:
+    if existe_conflito:
         messages.error(
             request,
-            "❌ Não é possível editar esta disponibilidade pois já existem agendamentos."
+            "❌ Não é possível editar esta disponibilidade pois já existem agendamentos neste dia e horário."
         )
         return redirect("disponibilidade_list")
 
+    # ✏️ SALVAR EDIÇÃO
     if request.method == "POST":
         disponibilidade.profissional_id = request.POST.get("profissional")
         disponibilidade.dia_semana = int(request.POST.get("dia_semana"))
@@ -285,9 +309,10 @@ def disponibilidade_edit(request, pk):
         disponibilidade.hora_fim = request.POST.get("hora_fim")
         disponibilidade.save()
 
-        messages.success(request, "Disponibilidade atualizada com sucesso.")
+        messages.success(request, "✅ Disponibilidade atualizada com sucesso.")
         return redirect("disponibilidade_list")
 
+    # 📆 Dias da semana (exibição)
     dias_semana = [
         (0, "Segunda"),
         (1, "Terça"),

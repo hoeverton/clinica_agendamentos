@@ -11,29 +11,34 @@
         body {
             min-height: 100vh;
         }
+
         .sidebar {
             width: 240px;
             min-height: 100vh;
             background-color: #f8f9fa;
             border-right: 1px solid #dee2e6;
         }
+
         .sidebar a {
             text-decoration: none;
             color: #333;
         }
+
         .sidebar a.nav-link.active {
             background-color: #e9ecef;
             font-weight: 500;
         }
+
         .sidebar a:hover {
             background-color: #e9ecef;
         }
+
         input[type="password"] {
-        width: 100%;
-        padding: 0.375rem 0.75rem;
-        border: 1px solid #ced4da;
-        border-radius: 0.375rem;
-    }
+            width: 100%;
+            padding: 0.375rem 0.75rem;
+            border: 1px solid #ced4da;
+            border-radius: 0.375rem;
+        }
     </style>
 </head>
 <body>
@@ -42,29 +47,56 @@
 
     <!-- MENU LATERAL -->
     <aside class="sidebar p-3">
+
+        <!-- CLÍNICA ATIVA -->
         <h5 class="mb-1">🏥 {{ clinica.nome }}</h5>
         <small class="text-muted">Clínica ativa</small>
 
+        <!-- BARRA DE WHATSAPP -->
+        {% if whatsapp_limite %}
+            <div class="mt-3 mb-3">
+                <small class="text-muted d-block mb-1">📲 WhatsApp</small>
 
+                <div class="progress" style="height: 8px;">
+                    <div class="progress-bar
+                        {% if whatsapp_percentual >= 100 %}
+                            bg-danger
+                        {% elif whatsapp_percentual >= 80 %}
+                            bg-warning
+                        {% else %}
+                            bg-success
+                        {% endif %}"
+                        style="width: {{ whatsapp_percentual }}%">
+                    </div>
+                </div>
+
+                <small class="text-muted">
+                    {{ whatsapp_usados }}/{{ whatsapp_limite }}
+                </small>
+            </div>
+        {% else %}
+            <small class="text-muted d-block mt-3 mb-3">
+                📲 WhatsApp ilimitado
+            </small>
+        {% endif %}
+
+        <!-- MENU -->
         <ul class="nav nav-pills flex-column gap-1">
 
             <li class="nav-item">
-                <a href="{% url 'clinica_dashboard' %}"
-                   class="nav-link">
+                <a href="{% url 'clinica_dashboard' %}" class="nav-link">
                     🏠 Dashboard
                 </a>
             </li>
 
             <li class="nav-item">
-                <a href="{% url 'relatorio_agendamentos_html' %}"
-                   class="nav-link">
+                <a href="{% url 'relatorio_agendamentos_html' %}" class="nav-link">
                     📊 Relatórios
                 </a>
             </li>
 
             <li class="nav-item">
-                <a href="{% url 'disponibilidade_list' %}"
-                   class="nav-link">
+                <a href="{% url 'disponibilidade_list' %}" class="nav-link">
                     📅 Disponibilidades
                 </a>
             </li>

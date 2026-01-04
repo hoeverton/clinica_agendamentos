@@ -65,6 +65,7 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 "clinica.context_processors.clinica_ativa",
+                "clinica.context_processors.whatsapp_status",
             ],
         },
     },

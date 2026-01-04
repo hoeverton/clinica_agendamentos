@@ -17,6 +17,8 @@ from django.views import View
 from agendamentos.models import Clinica, Agendamento, Disponibilidade, Profissional
 from agendamentos.models import WhatsappLog, Agendamento
 from django.contrib import messages
+from django.db.models import Count
+from django.db.models.functions import TruncMonth
 from django.shortcuts import get_object_or_404
 from datetime import datetime, timedelta
 from agendamentos.utils import (
@@ -668,23 +670,38 @@ def minha_conta(request):
     clinica = Clinica.objects.filter(user=request.user).first()
     agora = timezone.now()
 
+    # WhatsApp usado no mês atual
     whatsapp_usados = WhatsappLog.objects.filter(
         clinica=clinica,
         data__month=agora.month,
         data__year=agora.year
     ).count() if clinica else 0
 
+    # Limite e percentual
     whatsapp_limite = None
     whatsapp_percentual = 0
 
-    if clinica and clinica.plano:
-        if clinica.plano.max_whatsapp_mes is not None:
-            whatsapp_limite = clinica.plano.max_whatsapp_mes + clinica.whatsapp_extra
-            if whatsapp_limite > 0:
-                whatsapp_percentual = int((whatsapp_usados / whatsapp_limite) * 100)
+    if clinica and clinica.plano and clinica.plano.max_whatsapp_mes is not None:
+        whatsapp_limite = clinica.plano.max_whatsapp_mes + clinica.whatsapp_extra
+        if whatsapp_limite > 0:
+            whatsapp_percentual = int((whatsapp_usados / whatsapp_limite) * 100)
+
+    # 📈 HISTÓRICO MENSAL (últimos 6 meses)
+    historico_whatsapp = []
+
+    if clinica:
+        historico_whatsapp = (
+            WhatsappLog.objects
+            .filter(clinica=clinica)
+            .annotate(mes=TruncMonth("data"))
+            .values("mes")
+            .annotate(total=Count("id"))
+            .order_by("-mes")[:6]
+        )
 
     return render(request, "clinica/minha_conta.html", {
         "whatsapp_usados": whatsapp_usados,
         "whatsapp_limite": whatsapp_limite,
         "whatsapp_percentual": whatsapp_percentual,
+        "historico_whatsapp": historico_whatsapp,
     })

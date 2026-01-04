@@ -1,0 +1,73 @@
+{% extends "clinica/base.html" %}
+
+{% block title %}Planos{% endblock %}
+
+{% block content %}
+
+<h3 class="mb-4">💳 Planos Disponíveis</h3>
+
+<div class="row">
+
+    {% for plano in planos %}
+        <div class="col-md-4">
+            <div class="card mb-4
+                {% if clinica.plano and plano.id == clinica.plano.id %}
+                    border-primary
+                {% endif %}">
+
+                <div class="card-header text-center">
+                    <h5 class="mb-0">{{ plano.nome }}</h5>
+                </div>
+
+                <div class="card-body text-center">
+
+                    <h4 class="mb-3">
+                        R$ {{ plano.preco }}
+                        <small class="text-muted fs-6">/ mês</small>
+                    </h4>
+
+                    <ul class="list-unstyled mb-4">
+                        <li>📲 WhatsApp:
+                            {% if plano.max_whatsapp_mes %}
+                                {{ plano.max_whatsapp_mes }} mensagens/mês
+                            {% else %}
+                                Ilimitado
+                            {% endif %}
+                        </li>
+                        <li>👨‍⚕️ Profissionais:
+                            {% if plano.max_profissionais %}
+                                {{ plano.max_profissionais }}
+                            {% else %}
+                                Ilimitado
+                            {% endif %}
+                        </li>
+                        <li>🦷 Serviços:
+                            {% if plano.max_servicos %}
+                                {{ plano.max_servicos }}
+                            {% else %}
+                                Ilimitado
+                            {% endif %}
+                        </li>
+                    </ul>
+
+                    {% if clinica.plano and plano.id == clinica.plano.id %}
+                        <button class="btn btn-primary w-100" disabled>
+                            ⭐ Plano atual
+                        </button>
+                    {% else %}
+                        <button class="btn btn-outline-secondary w-100" disabled>
+                            Selecionar plano
+                        </button>
+                        <small class="text-muted d-block mt-2">
+                            Disponível em breve
+                        </small>
+                    {% endif %}
+
+                </div>
+            </div>
+        </div>
+    {% endfor %}
+
+</div>
+
+{% endblock %}

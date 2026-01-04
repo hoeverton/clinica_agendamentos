@@ -14,7 +14,7 @@ from django.utils import timezone
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import render, redirect
 from django.views import View
-from agendamentos.models import Clinica, Agendamento, Disponibilidade, Profissional
+from agendamentos.models import Clinica, Agendamento, Disponibilidade, Profissional, Plano
 from agendamentos.models import WhatsappLog, Agendamento
 from django.contrib import messages
 from django.db.models import Count
@@ -704,4 +704,15 @@ def minha_conta(request):
         "whatsapp_limite": whatsapp_limite,
         "whatsapp_percentual": whatsapp_percentual,
         "historico_whatsapp": historico_whatsapp,
+    })
+
+
+@login_required
+def planos(request):
+    clinica = Clinica.objects.filter(user=request.user).first()
+    planos = Plano.objects.all().order_by("preco")
+
+    return render(request, "clinica/planos.html", {
+        "clinica": clinica,
+        "planos": planos,
     })

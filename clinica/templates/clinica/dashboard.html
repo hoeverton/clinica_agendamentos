@@ -4,6 +4,43 @@
 {% block title %}Dashboard{% endblock %}
 
 {% block content %}
+<div class="container mt-4">
+    <h2 class="mb-4">Dashboard</h2>
+
+    <div class="row">
+
+        <!-- Card Profissionais -->
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Profissionais</h5>
+                    <p class="card-text">
+                        Gerencie os profissionais da clínica
+                    </p>
+                    <a href="{% url 'profissional_create' %}" class="btn btn-primary">
+                        ➕ Adicionar Profissional
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card Serviços -->
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Serviços</h5>
+                    <p class="card-text">
+                        Cadastre e organize os serviços
+                    </p>
+                    <a href="{% url 'servico_create' %}" class="btn btn-success">
+                        ➕ Adicionar Serviço
+                    </a>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
 
 <h2 class="mb-3">📊 Dashboard</h2>
 

@@ -21,6 +21,7 @@ from django.db.models import Count
 from django.db.models.functions import TruncMonth
 from django.shortcuts import get_object_or_404
 from datetime import datetime, timedelta
+from .forms import ProfissionalForm, ServicoForm
 from agendamentos.utils import (
     pode_enviar_whatsapp,
     enviar_whatsapp,
@@ -716,3 +717,30 @@ def planos(request):
         "clinica": clinica,
         "planos": planos,
     })
+
+@login_required
+def profissional_create(request):
+    form = ProfissionalForm(request.POST or None)
+
+    if form.is_valid():
+        profissional = form.save(commit=False)
+        profissional.clinica = request.user.clinica
+        profissional.save()
+        return redirect('clinica_dashboard')
+
+    return render(request, 'clinica/profissional_form.html', {'form': form})
+
+@login_required
+def servico_create(request):
+    form = ServicoForm(request.POST or None)
+
+    if form.is_valid():
+        servico = form.save(commit=False)
+        servico.clinica = request.user.clinica
+        servico.save()
+        return redirect('clinica_dashboard')
+
+    return render(request, 'clinica/servico_form.html', {'form': form})
+    
+
+

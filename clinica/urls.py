@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import ClinicaLoginView, clinica_logout, disponibilidade_create, disponibilidade_list, disponibilidade_delete, disponibilidade_edit, agendamento_delete, agendamento_edit, minha_conta,profissional_create,servico_create
+from .views import ClinicaLoginView, clinica_logout, disponibilidade_create, disponibilidade_list, disponibilidade_delete, disponibilidade_edit, agendamento_delete, agendamento_edit, minha_conta,profissional_create,servico_create, profissional_update, servico_update, servico_list, profissional_list
 from clinica.views import ClinicaDashboardView, relatorio_agendamentos_csv, relatorio_agendamentos_pdf, relatorio_agendamentos_html, planos
 
 
@@ -23,6 +23,10 @@ urlpatterns = [
     path("planos/", planos, name="planos"),
     path('profissionais/criar/',profissional_create, name='profissional_create'),
     path('servicos/criar/',servico_create, name='servico_create'),
+    path('profissionais/<int:pk>/editar/',profissional_update, name='profissional_update'),
+    path('profissionais/',profissional_list, name='profissional_list'),
+    path('servicos/<int:pk>/editar/', servico_update, name='servico_update'),
+    path('servicos/',servico_list, name='servico_list'),
 
     
 ]

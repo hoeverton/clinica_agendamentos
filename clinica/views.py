@@ -21,6 +21,7 @@ from django.db.models import Count
 from django.db.models.functions import TruncMonth
 from django.shortcuts import get_object_or_404
 from datetime import datetime, timedelta
+from agendamentos.models import Profissional, Servico
 from .forms import ProfissionalForm, ServicoForm
 from agendamentos.utils import (
     pode_enviar_whatsapp,
@@ -741,6 +742,68 @@ def servico_create(request):
         return redirect('clinica_dashboard')
 
     return render(request, 'clinica/servico_form.html', {'form': form})
+
+@login_required
+def profissional_update(request, pk):
+    profissional = get_object_or_404(
+        Profissional,
+        pk=pk,
+        clinica=request.user.clinica
+    )
+
+    form = ProfissionalForm(request.POST or None, instance=profissional)
+
+    if form.is_valid():
+        form.save()
+        return redirect('clinica_dashboard')
+
+    return render(
+        request,
+        'clinica/profissional_form.html',
+        {'form': form}
+    )
+
+@login_required
+def servico_update(request, pk):
+    servico = get_object_or_404(Servico, pk=pk, clinica=request.user.clinica)
+
+    form = ServicoForm(request.POST or None, instance=servico)
+
+    if form.is_valid():
+        form.save()
+        return redirect('clinica_dashboard')
+
+    return render(request, 'clinica/servico_form.html', {'form': form})
+
+@login_required
+def servico_list(request):
+    servicos = Servico.objects.filter(
+        clinica=request.user.clinica
+    ).order_by('nome')
+
+    return render(
+        request,
+        'clinica/servico_list.html',
+        {'servicos': servicos}
+    )
+    
+@login_required
+def profissional_list(request):
+    if not hasattr(request.user, 'clinica'):
+        return redirect('clinica_dashboard')
+
+    profissionais = Profissional.objects.filter(
+        clinica=request.user.clinica
+    ).order_by('nome')
+
+    return render(
+        request,
+        'clinica/profissional_list.html',
+        {'profissionais': profissionais}
+    )
+
+
+
     
 
 

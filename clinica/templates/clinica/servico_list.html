@@ -1,0 +1,55 @@
+{% extends "clinica/base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h3>Serviços</h3>
+
+        <a href="{% url 'servico_create' %}" class="btn btn-primary">
+            ➕ Novo Serviço
+        </a>
+    </div>
+
+    {% if servicos %}
+        <table class="table table-striped table-bordered">
+            <thead class="table-light">
+                <tr>
+                    <th>Nome</th>
+                    <th>Duração (min)</th>
+                    <th>Preço</th>
+                    <th style="width: 120px;">Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for servico in servicos %}
+                    <tr>
+                        <td>{{ servico.nome }}</td>
+                        <td>{{ servico.duracao_minutos }}</td>
+                        <td>
+                            {% if servico.preco %}
+                                R$ {{ servico.preco }}
+                            {% else %}
+                                —
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a
+                                href="{% url 'servico_update' servico.id %}"
+                                class="btn btn-sm btn-warning"
+                            >
+                                ✏️ Editar
+                            </a>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <div class="alert alert-info">
+            Nenhum serviço cadastrado.
+        </div>
+    {% endif %}
+
+</div>
+{% endblock %}

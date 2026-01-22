@@ -33,12 +33,26 @@ class Clinica(models.Model):
     
 
 class Profissional(models.Model):
-    clinica = models.ForeignKey(Clinica, on_delete=models.CASCADE, related_name="profissionais")
+    clinica = models.ForeignKey(
+        Clinica,
+        on_delete=models.CASCADE,
+        related_name="profissionais"
+    )
     nome = models.CharField(max_length=100)
-    especialidade = models.CharField(max_length=100, blank=True, null=True)
+    especialidade = models.CharField(
+        max_length=100,
+        blank=True,
+        null=True
+    )
+
+    servicos = models.ManyToManyField(
+        'Servico',
+        related_name='profissionais',
+        blank=True
+    )
 
     def __str__(self):
-        return f"{self.nome} ({self.especialidade})"
+        return self.nome
     
 
 class Servico(models.Model):

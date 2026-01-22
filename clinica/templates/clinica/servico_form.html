@@ -2,8 +2,17 @@
 {% block content %}
 
 <div class="container mt-4">
-    <h3 class="mb-3">Cadastro de Serviços</h3>
 
+    <h3>
+        {% if form.instance.pk %}
+            Editar Serviço
+        {% else %}
+            Cadastrar Serviço
+        {% endif %}
+    </h3>
+
+
+    
     <form method="post">
         {% csrf_token %}
         {{ form.as_p }}
@@ -11,7 +20,7 @@
         <button type="submit" class="btn btn-primary">
             Salvar
         </button>
-        <a href="{% url 'clinica_dashboard' %}" class="btn btn-secondary">
+        <a href="{% url 'servico_list' %}" class="btn btn-secondary">
             Cancelar
         </a>
     </form>

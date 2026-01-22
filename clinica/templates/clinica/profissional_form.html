@@ -2,7 +2,13 @@
 {% block content %}
 
 <div class="container mt-4">
-    <h3 class="mb-3">Cadastro de Profissionais</h3>
+    <h3>
+        {% if form.instance.pk %}
+            Editar Profissional
+        {% else %}
+            Cadastrar Profissional
+        {% endif %}
+    </h3>
 
     <form method="post">
         {% csrf_token %}
@@ -11,7 +17,7 @@
         <button type="submit" class="btn btn-primary">
             Salvar
         </button>
-        <a href="{% url 'clinica_dashboard' %}" class="btn btn-secondary">
+        <a href="{% url 'profissional_list' %}" class="btn btn-secondary">
             Cancelar
         </a>
     </form>

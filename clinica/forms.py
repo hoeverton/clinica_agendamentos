@@ -4,11 +4,12 @@ from agendamentos.models import Profissional, Servico
 class ProfissionalForm(forms.ModelForm):
     class Meta:
         model = Profissional
-        fields = ['nome', 'especialidade']
+        fields = ['nome', 'especialidade', 'servicos']
 
         widgets = {
             'nome': forms.TextInput(attrs={'class': 'form-control'}),
             'especialidade': forms.TextInput(attrs={'class': 'form-control'}),
+            'servicos': forms.CheckboxSelectMultiple(),
         }
 
 class ServicoForm(forms.ModelForm):

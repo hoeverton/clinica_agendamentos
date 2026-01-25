@@ -1,9 +1,9 @@
 {% extends "clinica/base.html" %}
-{% block content %}
 
+{% block content %}
 <div class="container mt-4">
 
-    <h3>
+    <h3 class="mb-3">
         {% if form.instance.pk %}
             Editar Serviço
         {% else %}
@@ -11,19 +11,42 @@
         {% endif %}
     </h3>
 
-
-    
     <form method="post">
         {% csrf_token %}
-        {{ form.as_p }}
 
-        <button type="submit" class="btn btn-primary">
-            Salvar
-        </button>
-        <a href="{% url 'servico_list' %}" class="btn btn-secondary">
-            Cancelar
-        </a>
+        <!-- Nome -->
+        <div class="mb-3">
+            <label class="form-label">{{ form.nome.label }}</label>
+            {{ form.nome }}
+            {{ form.nome.errors }}
+        </div>
+
+        <!-- Duração -->
+        <div class="mb-3">
+            <label class="form-label">{{ form.duracao_minutos.label }}</label>
+            {{ form.duracao_minutos }}
+            {{ form.duracao_minutos.errors }}
+        </div>
+
+        <!-- Preço -->
+        <div class="mb-3">
+            <label class="form-label">{{ form.preco.label }}</label>
+            {{ form.preco }}
+            {{ form.preco.errors }}
+        </div>
+
+        <!-- Botões -->
+        <div class="mt-4">
+            <button type="submit" class="btn btn-primary">
+                💾 Salvar
+            </button>
+
+            <a href="{% url 'servico_list' %}" class="btn btn-secondary">
+                Cancelar
+            </a>
+        </div>
+
     </form>
-</div>
 
+</div>
 {% endblock %}

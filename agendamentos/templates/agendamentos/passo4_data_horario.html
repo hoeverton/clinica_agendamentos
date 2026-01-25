@@ -1,10 +1,22 @@
 <!DOCTYPE html>
-<html>
+<html lang="pt-br">
 <head>
+    <meta charset="UTF-8">
     <title>Agendar - Data e Horário</title>
-    <link rel="stylesheet"
-          href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+
+    <!-- Bootstrap -->
+    <link
+        rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+    >
+
+    <!-- Flatpickr -->
+    <link
+        rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css"
+    >
 </head>
+
 <body class="bg-light">
 
 <div class="container mt-5">
@@ -12,20 +24,21 @@
 
         <h3 class="text-center mb-4">Escolha a data e horário</h3>
 
-        <!-- 🔔 BLOCO ÚNICO DE MENSAGENS -->
+        <!-- 🔔 MENSAGENS -->
         {% if messages %}
             {% for message in messages %}
                 <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
                     {{ message }}
-                    <button type="button"
-                            class="btn-close"
-                            data-bs-dismiss="alert"
-                            aria-label="Close">
+                    <button
+                        type="button"
+                        class="btn-close"
+                        data-bs-dismiss="alert"
+                        aria-label="Close">
                     </button>
                 </div>
             {% endfor %}
         {% endif %}
-        <!-- 🔔 FIM DO BLOCO DE MENSAGENS -->
+        <!-- 🔔 FIM MENSAGENS -->
 
         <!-- ===================== -->
         <!-- FORM 1 → DATA (GET) -->
@@ -34,13 +47,15 @@
 
             <div class="mb-3">
                 <label class="form-label">Data</label>
+
                 <input
-                    type="date"
+                    type="text"
+                    id="data_agendamento"
                     name="data"
                     value="{{ data }}"
                     required
                     class="form-control"
-                    onchange="this.form.submit()"
+                    placeholder="Selecione uma data"
                 >
             </div>
 
@@ -96,6 +111,41 @@
     </div>
 </div>
 
+<!-- JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/pt.js"></script>
+
+<!-- 🎨 CALENDÁRIO COM FORMATO BR -->
+<script>
+    const datasDisponiveis = {{ datas_disponiveis|safe }};
+
+    flatpickr("#data_agendamento", {
+        locale: "pt",           // 🇧🇷 Português
+        dateFormat: "Y-m-d",     // formato REAL enviado ao backend
+        altInput: true,          // input visual alternativo
+        altFormat: "d/m/Y",      // 👀 formato brasileiro
+        minDate: "today",
+        disableMobile: true,
+        enable: datasDisponiveis,
+
+        onChange: function(selectedDates, dateStr) {
+            if (dateStr) {
+                document.querySelector("form[method='GET']").submit();
+            }
+        },
+
+        onDayCreate: function(dObj, dStr, fp, dayElem) {
+            const data = dayElem.dateObj.toISOString().split('T')[0];
+
+            if (datasDisponiveis.includes(data)) {
+                dayElem.style.backgroundColor = "#d4edda"; // verde claro
+                dayElem.style.color = "#155724";
+                dayElem.style.borderRadius = "50%";
+            }
+        }
+    });
+</script>
+
 </body>
 </html>

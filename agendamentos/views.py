@@ -4,53 +4,15 @@ from .models import Paciente, Servico, Profissional, Clinica, Agendamento, Dispo
 from agendamentos.utils import (pode_enviar_whatsapp,registrar_envio_whatsapp, enviar_whatsapp)
 from django.views.generic import TemplateView
 from agendamentos.models import WhatsappLog
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 from django.views.decorators.http import require_POST
 from django.contrib import messages
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
+import json
 
-"""class ClinicaDashboardView(LoginRequiredMixin, TemplateView):
-    template_name = "clinica/dashboard.html"
-    login_url = "/clinica/login/"
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
 
-        # 🔒 BUSCA APENAS CLÍNICAS DO USUÁRIO
-        clinicas_do_usuario = Clinica.objects.filter(user=self.request.user)
-
-        # 🔥 BUSCA AGENDAMENTOS APENAS DESSAS CLÍNICAS
-        agendamentos = Agendamento.objects.filter(
-            clinica__in=clinicas_do_usuario
-        ).select_related(
-            "clinica",
-            "profissional",
-            "paciente",
-            "servico"
-        ).order_by("data", "horario")
-
-        # ⚠️ Se quiser exibir só UMA clínica (ex: primeira)
-        clinica = clinicas_do_usuario.first()
-
-        agora = timezone.now()
-
-        whatsapp_usados = WhatsappLog.objects.filter(
-            clinica__in=clinicas_do_usuario,
-            data__month=agora.month,
-            data__year=agora.year
-        ).count()
-
-        context.update({
-            "clinica": clinica,
-            "agendamentos": agendamentos,
-            "today": agora.date(),
-            "whatsapp_usados": whatsapp_usados,
-        })
-
-        return context
-
-"""
 # PASSO 1 - TELEFONE
 def passo1_telefone(request, clinica_slug):
     clinica = Clinica.objects.get(slug=clinica_slug)
@@ -112,10 +74,29 @@ def passo4_data_horario(request, clinica_slug):
     profissional = Profissional.objects.get(id=profissional_id)
 
     servico = Servico.objects.get(id=request.session["servico_id"])
-    duracao = servico.duracao_minutos  # 🔑 duração do serviço
+    duracao = servico.duracao_minutos  # duração do serviço
 
     horarios_disponiveis = []
     data = None
+
+    # ==================================================
+    # 🔹 1️⃣ CALCULA DATAS DISPONÍVEIS (PRÓXIMOS 30 DIAS)
+    # ==================================================
+    datas_disponiveis = []
+    hoje = date.today()
+
+    for i in range(30):
+        dia = hoje + timedelta(days=i)
+        dia_semana = dia.weekday()
+
+        tem_disponibilidade = Disponibilidade.objects.filter(
+            clinica=clinica,
+            profissional=profissional,
+            dia_semana=dia_semana
+        ).exists()
+
+        if tem_disponibilidade:
+            datas_disponiveis.append(dia.strftime("%Y-%m-%d"))
 
     # =========================
     # GET → escolher a data
@@ -154,7 +135,9 @@ def passo4_data_horario(request, clinica_slug):
                     conflito = False
                     for ag in agendamentos:
                         ag_inicio = datetime.combine(datetime.today(), ag.horario)
-                        ag_fim = ag_inicio + timedelta(minutes=ag.servico.duracao_minutos)
+                        ag_fim = ag_inicio + timedelta(
+                            minutes=ag.servico.duracao_minutos
+                        )
 
                         # verifica sobreposição
                         if inicio < ag_fim and fim > ag_inicio:
@@ -181,11 +164,16 @@ def passo4_data_horario(request, clinica_slug):
         request.session["horario"] = horario
         return redirect("confirmar", clinica_slug=clinica_slug)
 
+    # =========================
+    # RENDER FINAL
+    # =========================
     return render(request, "agendamentos/passo4_data_horario.html", {
         "clinica": clinica,
         "data": data,
-        "horarios": horarios_disponiveis
+        "horarios": horarios_disponiveis,
+        "datas_disponiveis": json.dumps(datas_disponiveis),
     })
+
     
 
 # CONFIRMAR AGENDAMENTO
@@ -206,26 +194,29 @@ def confirmar(request, clinica_slug):
         id=request.session.get("profissional_id")
     )
 
-    data = request.session.get("data")       # string
-    horario = request.session.get("horario") # string
+    data_str = request.session.get("data")       # string YYYY-MM-DD
+    horario_str = request.session.get("horario") # string HH:MM
 
     # 🔒 Segurança extra
-    if not all([paciente, servico, profissional, data, horario]):
+    if not all([paciente, servico, profissional, data_str, horario_str]):
         messages.error(
             request,
             "Sessão expirada. Por favor, refaça o agendamento."
         )
         return redirect("passo1_telefone", clinica_slug=clinica.slug)
 
-    if request.method == "POST":
+    # 🔹 Converte data/hora para exibição (GET)
+    try:
+        data = datetime.strptime(data_str, "%Y-%m-%d").date()
+        horario = datetime.strptime(horario_str, "%H:%M").time()
+    except ValueError:
+        messages.error(request, "Data ou horário inválido.")
+        return redirect("passo4_data_horario", clinica_slug=clinica.slug)
 
-        # 🔥 Converte string → date / time
-        try:
-            data = datetime.strptime(data, "%Y-%m-%d").date()
-            horario = datetime.strptime(horario, "%H:%M").time()
-        except ValueError:
-            messages.error(request, "Data ou horário inválido.")
-            return redirect("passo4_data_horario", clinica_slug=clinica.slug)
+    # =========================
+    # POST → confirmar agendamento
+    # =========================
+    if request.method == "POST":
 
         # 🔒 1️⃣ Verifica conflito antes de criar
         conflito = Agendamento.objects.filter(
@@ -296,14 +287,16 @@ def confirmar(request, clinica_slug):
 
         return redirect("sucesso", clinica_slug=clinica.slug)
 
-    # 🔹 GET (exibe tela de confirmação)
+    # =========================
+    # GET → tela de confirmação
+    # =========================
     return render(request, "agendamentos/confirmar.html", {
         "clinica": clinica,
         "paciente": paciente,
         "servico": servico,
         "profissional": profissional,
-        "data": data,
-        "horario": horario,
+        "data": data,       # 👈 agora é date
+        "horario": horario # 👈 agora é time
     })
 
 def sucesso(request, clinica_slug):

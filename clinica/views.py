@@ -22,6 +22,7 @@ from django.db.models.functions import TruncMonth
 from django.shortcuts import get_object_or_404
 from datetime import datetime, timedelta
 from agendamentos.models import Profissional, Servico
+from django.views.decorators.http import require_POST
 from .forms import ProfissionalForm, ServicoForm
 from agendamentos.utils import (
     pode_enviar_whatsapp,
@@ -721,15 +722,27 @@ def planos(request):
 
 @login_required
 def profissional_create(request):
+    if not hasattr(request.user, 'clinica'):
+        return redirect('clinica_dashboard')
+
     form = ProfissionalForm(request.POST or None)
+    form.fields['servicos'].queryset = Servico.objects.filter(
+        clinica=request.user.clinica
+    )
 
     if form.is_valid():
         profissional = form.save(commit=False)
         profissional.clinica = request.user.clinica
         profissional.save()
-        return redirect('clinica_dashboard')
+        form.save_m2m()  # salva os serviços
+        return redirect('profissional_list')
 
-    return render(request, 'clinica/profissional_form.html', {'form': form})
+    return render(
+        request,
+        'clinica/profissional_form.html',
+        {'form': form}
+    )
+
 
 @login_required
 def servico_create(request):
@@ -739,7 +752,7 @@ def servico_create(request):
         servico = form.save(commit=False)
         servico.clinica = request.user.clinica
         servico.save()
-        return redirect('clinica_dashboard')
+        return redirect('servico_list')
 
     return render(request, 'clinica/servico_form.html', {'form': form})
 
@@ -755,7 +768,7 @@ def profissional_update(request, pk):
 
     if form.is_valid():
         form.save()
-        return redirect('clinica_dashboard')
+        return redirect('profissional_list')
 
     return render(
         request,
@@ -789,12 +802,13 @@ def servico_list(request):
     
 @login_required
 def profissional_list(request):
+
     if not hasattr(request.user, 'clinica'):
-        return redirect('clinica_dashboard')
+        return redirect('profissional_list')
 
     profissionais = Profissional.objects.filter(
         clinica=request.user.clinica
-    ).order_by('nome')
+    ).prefetch_related('servicos').order_by('nome')
 
     return render(
         request,
@@ -802,8 +816,37 @@ def profissional_list(request):
         {'profissionais': profissionais}
     )
 
+@login_required
+@require_POST
+def profissional_delete(request, pk):
 
+    if not hasattr(request.user, 'clinica'):
+        return redirect('clinica_dashboard')
 
+    profissional = get_object_or_404(
+        Profissional,
+        pk=pk,
+        clinica=request.user.clinica
+    )
+
+    profissional.delete()
+    return redirect('profissional_list')
+
+@login_required
+@require_POST
+def servico_delete(request, pk):
+
+    if not hasattr(request.user, 'clinica'):
+        return redirect('clinica_dashboard')
+
+    servico = get_object_or_404(
+        Servico,
+        pk=pk,
+        clinica=request.user.clinica
+    )
+
+    servico.delete()
+    return redirect('servico_list')
     
 
 

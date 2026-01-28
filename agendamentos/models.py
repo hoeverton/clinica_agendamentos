@@ -5,6 +5,7 @@ from clinica.models import Plano
 from django.utils import timezone
 
 
+
 class Clinica(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, null=True, blank=True)
     nome = models.CharField(max_length=100)
@@ -14,6 +15,15 @@ class Clinica(models.Model):
     whatsapp_extra = models.IntegerField(default=0)
 
 
+    #Permissões
+    class Meta:
+        permissions = [
+            ("ver_dashboard", "Pode ver o dashboard"),
+            ("gerenciar_agendamentos", "Pode gerenciar agendamentos"),
+            ("gerenciar_servicos", "Pode gerenciar serviços"),
+            ("gerenciar_profissionais", "Pode gerenciar profissionais"),
+            ("ver_relatorios", "Pode ver relatórios"),
+        ]
     # 🔑 NOVO CAMPO
     plano = models.ForeignKey(
         Plano,
@@ -156,3 +166,12 @@ class WhatsappLog(models.Model):
 
     def __str__(self):
         return f"{self.clinica.nome} - {self.telefone} - {self.tipo}"
+    
+
+
+class UsuarioClinica(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    clinica = models.ForeignKey(Clinica, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f"{self.user.username} - {self.clinica.nome}"

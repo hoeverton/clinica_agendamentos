@@ -5,13 +5,13 @@ from reportlab.pdfgen import canvas
 from reportlab.lib.units import cm
 from django.template.loader import render_to_string
 from django.contrib.auth import authenticate, login, logout
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, permission_required
 from django.views.generic import TemplateView
 from django.http import HttpResponse
 from django.contrib import messages
 from datetime import datetime
 from django.utils import timezone
-from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.mixins import LoginRequiredMixin,PermissionRequiredMixin
 from django.shortcuts import render, redirect
 from django.views import View
 from agendamentos.models import Clinica, Agendamento, Disponibilidade, Profissional, Plano
@@ -50,45 +50,47 @@ class ClinicaLoginView(View):
 
         return render(request, self.template_name, {"error": "Credenciais inválidas"})
 
-class ClinicaDashboardView(LoginRequiredMixin, TemplateView):
+class ClinicaDashboardView(
+    LoginRequiredMixin,
+   
+    TemplateView
+):
     template_name = "clinica/dashboard.html"
     login_url = "/clinica/login/"
+    permission_required = "agendamentos.ver_dashboard"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
-        # 1️⃣ Clínicas do usuário
-        clinicas_do_usuario = Clinica.objects.filter(user=self.request.user)
+        # 🔑 1️⃣ Clínica do usuário (NOVO PADRÃO)
+        clinica = self.request.user.usuarioclinica.clinica
 
-        # 2️⃣ Clínica ativa
-        clinica = clinicas_do_usuario.first()
-
-        # 3️⃣ Plano
+        # 🔑 2️⃣ Plano
         plano = clinica.plano if clinica else None
 
-        # 4️⃣ Datas
+        # 🔑 3️⃣ Datas
         agora = timezone.now()
         hoje = agora.date()
         amanha = hoje + timedelta(days=1)
 
-        # 5️⃣ WhatsApp usados no mês
+        # 🔑 4️⃣ WhatsApp usados no mês (SOMENTE da clínica)
         whatsapp_usados = WhatsappLog.objects.filter(
-            clinica__in=clinicas_do_usuario,
+            clinica=clinica,
             data__month=agora.month,
             data__year=agora.year
         ).count()
 
-        # 6️⃣ Limite WhatsApp
+        # 🔑 5️⃣ Limite WhatsApp
         if plano and plano.max_whatsapp_mes is None:
-            whatsapp_limite = None
+            whatsapp_limite = None  # ilimitado
         elif plano:
             whatsapp_limite = plano.max_whatsapp_mes + clinica.whatsapp_extra
         else:
             whatsapp_limite = 0
 
-        # 7️⃣ TODOS os agendamentos
+        # 🔑 6️⃣ Agendamentos da clínica
         agendamentos = Agendamento.objects.filter(
-            clinica__in=clinicas_do_usuario
+            clinica=clinica
         ).select_related(
             "clinica",
             "profissional",
@@ -96,15 +98,15 @@ class ClinicaDashboardView(LoginRequiredMixin, TemplateView):
             "servico"
         ).order_by("data", "horario")
 
-        # 8️⃣ Regra única de edição (APLICA PARA TODOS)
+        # 🔑 7️⃣ Regra única de edição
         for a in agendamentos:
             a.pode_editar = a.data >= hoje
 
-        # 9️⃣ Sublistas (herdam a regra acima)
+        # 🔑 8️⃣ Sublistas
         agendamentos_hoje = [a for a in agendamentos if a.data == hoje]
         agendamentos_amanha = [a for a in agendamentos if a.data == amanha]
 
-        # 🔟 Contexto
+        # 🔑 9️⃣ Contexto final
         context.update({
             "clinica": clinica,
             "agendamentos": agendamentos,
@@ -120,13 +122,16 @@ class ClinicaDashboardView(LoginRequiredMixin, TemplateView):
 
 
 
+@require_POST
+@login_required
 def clinica_logout(request):
     logout(request)
     return redirect("clinica_login")
 
 @login_required
+@permission_required("agendamentos.gerenciar_agendamentos", raise_exception=True)
 def disponibilidade_create(request):
-    clinica = Clinica.objects.get(user=request.user)
+    clinica = request.user.usuarioclinica.clinica
     profissionais = Profissional.objects.filter(clinica=clinica)
 
     dias_semana = [
@@ -202,8 +207,9 @@ def disponibilidade_create(request):
     })
 
 @login_required
+@permission_required("agendamentos.gerenciar_agendamentos", raise_exception=True)
 def disponibilidade_list(request):
-    clinica = Clinica.objects.get(user=request.user)
+    clinica = request.user.usuarioclinica.clinica
 
     disponibilidades = Disponibilidade.objects.filter(
         clinica=clinica
@@ -219,17 +225,23 @@ def disponibilidade_list(request):
         6: "Domingo",
     }
 
-    return render(request, "clinica/disponibilidade_list.html", {
-        "disponibilidades": disponibilidades,
-        "dias": dias,
-    })
+    return render(
+        request,
+        "clinica/disponibilidade_list.html",
+        {
+            "disponibilidades": disponibilidades,
+            "dias": dias,
+        }
+    )
 
 @login_required
+@permission_required("agendamentos.gerenciar_agendamentos", raise_exception=True)
+@require_POST
 def disponibilidade_delete(request, pk):
     if request.method != "POST":
         return redirect("disponibilidade_list")
 
-    clinica = Clinica.objects.get(user=request.user)
+    clinica = clinica = request.user.usuarioclinica.clinica
 
     disponibilidade = Disponibilidade.objects.get(
         pk=pk,
@@ -257,11 +269,10 @@ def disponibilidade_delete(request, pk):
 
 
 @login_required
+@permission_required("agendamentos.gerenciar_agendamentos", raise_exception=True)
 def disponibilidade_edit(request, pk):
-    # 🔐 Clínica logada
-    clinica = get_object_or_404(Clinica, user=request.user)
+    clinica = request.user.usuarioclinica.clinica
 
-    # 📅 Disponibilidade
     disponibilidade = get_object_or_404(
         Disponibilidade,
         pk=pk,
@@ -269,28 +280,25 @@ def disponibilidade_edit(request, pk):
     )
 
     profissionais = Profissional.objects.filter(clinica=clinica)
-
-    # 🔒 VERIFICAR CONFLITO REAL DE AGENDAMENTO
     hoje = timezone.now().date()
 
-    # 🔁 MAPEAMENTO CORRETO DO DIA DA SEMANA
-    # Disponibilidade:
-    # 0=Seg, 1=Ter, 2=Qua, 3=Qui, 4=Sex, 5=Sáb, 6=Dom
-    # Django week_day:
-    # 1=Dom, 2=Seg, 3=Ter, 4=Qua, 5=Qui, 6=Sex, 7=Sáb
+    # 🔁 Mapeamento correto do dia da semana
+    # Disponibilidade: 0=Seg ... 6=Dom
+    # Django week_day: 1=Dom ... 7=Sáb
     MAPA_DIA_SEMANA = {
-        0: 2,  # Segunda
-        1: 3,  # Terça
-        2: 4,  # Quarta
-        3: 5,  # Quinta
-        4: 6,  # Sexta
-        5: 7,  # Sábado
-        6: 1,  # Domingo
+        0: 2,
+        1: 3,
+        2: 4,
+        3: 5,
+        4: 6,
+        5: 7,
+        6: 1,
     }
 
     django_week_day = MAPA_DIA_SEMANA[disponibilidade.dia_semana]
 
-    existe_conflito = Agendamento.objects.filter(
+    # 🔒 Verifica se já existem agendamentos futuros
+    existe_agendamento = Agendamento.objects.filter(
         clinica=clinica,
         profissional=disponibilidade.profissional,
         data__gte=hoje,
@@ -299,14 +307,13 @@ def disponibilidade_edit(request, pk):
         horario__lt=disponibilidade.hora_fim,
     ).exists()
 
-    if existe_conflito:
+    if existe_agendamento:
         messages.error(
             request,
-            "❌ Não é possível editar esta disponibilidade pois já existem agendamentos neste dia e horário."
+            "❌ Não é possível editar esta disponibilidade pois já existem agendamentos."
         )
         return redirect("disponibilidade_list")
 
-    # ✏️ SALVAR EDIÇÃO
     if request.method == "POST":
         disponibilidade.profissional_id = request.POST.get("profissional")
         disponibilidade.dia_semana = int(request.POST.get("dia_semana"))
@@ -314,25 +321,21 @@ def disponibilidade_edit(request, pk):
         disponibilidade.hora_fim = request.POST.get("hora_fim")
         disponibilidade.save()
 
-        messages.success(request, "✅ Disponibilidade atualizada com sucesso.")
+        messages.success(
+            request,
+            "✅ Disponibilidade atualizada com sucesso."
+        )
         return redirect("disponibilidade_list")
 
-    # 📆 Dias da semana (exibição)
-    dias_semana = [
-        (0, "Segunda"),
-        (1, "Terça"),
-        (2, "Quarta"),
-        (3, "Quinta"),
-        (4, "Sexta"),
-        (5, "Sábado"),
-        (6, "Domingo"),
-    ]
-
-    return render(request, "clinica/disponibilidade_edit.html", {
-        "disponibilidade": disponibilidade,
-        "profissionais": profissionais,
-        "dias_semana": dias_semana,
-    })
+    return render(
+        request,
+        "clinica/disponibilidade_edit.html",
+        {
+            "disponibilidade": disponibilidade,
+            "profissionais": profissionais,
+            "dias_semana": Disponibilidade.DIA_SEMANA,
+        }
+    )
 
 @login_required
 def disponibilidade_tem_agendamento(disponibilidade):
@@ -355,11 +358,14 @@ def disponibilidade_tem_agendamento(disponibilidade):
     return False
 
 @login_required
+@permission_required("agendamentos.gerenciar_agendamentos", raise_exception=True)
+@require_POST
 def agendamento_delete(request, pk):
+    clinica = request.user.usuarioclinica.clinica
     agendamento = get_object_or_404(
         Agendamento,
         pk=pk,
-        clinica__user=request.user  # 🔒 garante clínica correta
+        clinica=clinica  # 🔒 garante clínica correta
     )
 
     hoje = timezone.now().date()
@@ -410,11 +416,15 @@ def agendamento_delete(request, pk):
     return redirect("clinica_dashboard")
 
 @login_required
+@permission_required("agendamentos.gerenciar_agendamentos", raise_exception=True)
 def agendamento_edit(request, pk):
+    clinica = request.user.usuarioclinica.clinica
+    
+
     agendamento = get_object_or_404(
         Agendamento,
         pk=pk,
-        clinica__user=request.user  # 🔒 segurança
+        clinica=clinica
     )
 
     hoje = timezone.now().date()
@@ -427,95 +437,50 @@ def agendamento_edit(request, pk):
         return redirect("clinica_dashboard")
 
     if request.method == "POST":
-        data_nova = request.POST.get("data")
-        horario_novo = request.POST.get("horario")
+        data = request.POST.get("data")
+        horario = request.POST.get("horario")
 
-        if not data_nova or not horario_novo:
+        if not data or not horario:
             messages.error(request, "Preencha todos os campos.")
             return redirect("agendamento_edit", pk=pk)
 
-        # 🔥 converte string → date / time
-        data_nova = datetime.strptime(data_nova, "%Y-%m-%d").date()
-        horario_novo = datetime.strptime(horario_novo, "%H:%M").time()
+        data = datetime.strptime(data, "%Y-%m-%d").date()
+        horario = datetime.strptime(horario, "%H:%M").time()
 
-        # 🔍 verifica se realmente mudou
-        mudou = (
-            agendamento.data != data_nova or
-            agendamento.horario != horario_novo
-        )
-
-        if not mudou:
-            messages.info(
-                request,
-                "Nenhuma alteração foi feita no agendamento."
-            )
-            return redirect("clinica_dashboard")
-
-        # 🔒 verifica conflito
         conflito = Agendamento.objects.filter(
+            clinica=clinica,
             profissional=agendamento.profissional,
-            data=data_nova,
-            horario=horario_novo
+            data=data,
+            horario=horario
         ).exclude(pk=agendamento.pk).exists()
 
         if conflito:
             messages.error(
                 request,
-                "❌ Este horário já está ocupado. Escolha outro."
+                "❌ Este horário já está ocupado."
             )
             return redirect("agendamento_edit", pk=pk)
 
-        # ✅ salva alteração
-        agendamento.data = data_nova
-        agendamento.horario = horario_novo
+        agendamento.data = data
+        agendamento.horario = horario
         agendamento.save()
-
-        # 📲 WHATSAPP DE EDIÇÃO
-        clinica = agendamento.clinica
-        paciente = agendamento.paciente
-
-        if pode_enviar_whatsapp(clinica):
-            mensagem = (
-                f"Olá {paciente.nome} 👋\n\n"
-                f"Seu agendamento foi ALTERADO:\n\n"
-                f"📅 Nova data: {agendamento.data.strftime('%d/%m/%Y')}\n"
-                f"⏰ Novo horário: {agendamento.horario.strftime('%H:%M')}\n"
-                f"👨‍⚕️ Profissional: {agendamento.profissional}\n"
-                f"🦷 Serviço: {agendamento.servico}\n\n"
-                f"Se tiver alguma dúvida, entre em contato conosco."
-            )
-
-            enviado = enviar_whatsapp(
-                paciente.telefone,
-                mensagem
-            )
-
-            if enviado:
-                registrar_envio_whatsapp(
-                    clinica=clinica,
-                    telefone=paciente.telefone,
-                    tipo="edicao"
-                )
 
         messages.success(
             request,
             "✅ Agendamento atualizado com sucesso."
         )
-
         return redirect("clinica_dashboard")
 
-    # GET
-    return render (
-    request,
-    "clinica/agendamento_edit.html",
-    {
-        "agendamento": agendamento
-    }
-)
+    return render(
+        request,
+        "clinica/agendamento_edit.html",
+        {"agendamento": agendamento}
+    )
 
 @login_required
+@permission_required("agendamentos.ver_relatorios", raise_exception=True)
 def relatorio_agendamentos_csv(request):
-    clinica = Clinica.objects.get(user=request.user)
+    clinica = request.user.usuarioclinica.clinica
 
     data_inicio = request.GET.get("data_inicio")
     data_fim = request.GET.get("data_fim")
@@ -562,8 +527,9 @@ def relatorio_agendamentos_csv(request):
     return response
 
 @login_required
+@permission_required("agendamentos.ver_relatorios", raise_exception=True)
 def relatorio_agendamentos_pdf(request):
-    clinica = Clinica.objects.get(user=request.user)
+    clinica = request.user.usuarioclinica.clinica
 
     data_inicio = request.GET.get("data_inicio")
     data_fim = request.GET.get("data_fim")
@@ -640,8 +606,9 @@ def relatorio_agendamentos_pdf(request):
     return response
 
 @login_required
+@permission_required("agendamentos.ver_relatorios", raise_exception=True)
 def relatorio_agendamentos_html(request):
-    clinica = Clinica.objects.get(user=request.user)
+    clinica = request.user.usuarioclinica.clinica
 
     data_inicio = request.GET.get("data_inicio")
     data_fim = request.GET.get("data_fim")
@@ -711,142 +678,171 @@ def minha_conta(request):
 
 
 @login_required
+@permission_required("clinica.view_plano", raise_exception=True)
 def planos(request):
-    clinica = Clinica.objects.filter(user=request.user).first()
+    clinica = request.user.usuarioclinica.clinica
     planos = Plano.objects.all().order_by("preco")
-
-    return render(request, "clinica/planos.html", {
-        "clinica": clinica,
-        "planos": planos,
-    })
-
-@login_required
-def profissional_create(request):
-    if not hasattr(request.user, 'clinica'):
-        return redirect('clinica_dashboard')
-
-    form = ProfissionalForm(request.POST or None)
-    form.fields['servicos'].queryset = Servico.objects.filter(
-        clinica=request.user.clinica
-    )
-
-    if form.is_valid():
-        profissional = form.save(commit=False)
-        profissional.clinica = request.user.clinica
-        profissional.save()
-        form.save_m2m()  # salva os serviços
-        return redirect('profissional_list')
 
     return render(
         request,
-        'clinica/profissional_form.html',
-        {'form': form}
+        "clinica/planos.html",
+        {
+            "clinica": clinica,
+            "planos": planos,
+        }
+    )
+@login_required
+@permission_required("agendamentos.gerenciar_profissionais", raise_exception=True)
+def profissional_create(request):
+    clinica = request.user.usuarioclinica.clinica
+    form = ProfissionalForm(request.POST or None)
+
+    if form.is_valid():
+        profissional = form.save(commit=False)
+        profissional.clinica = clinica
+        profissional.save()
+        form.save_m2m()
+        return redirect("profissional_list")
+
+    return render(
+        request,
+        "clinica/profissional_form.html",
+        {"form": form}
     )
 
 
 @login_required
+@permission_required("agendamentos.gerenciar_servicos", raise_exception=True)
 def servico_create(request):
+    clinica = request.user.usuarioclinica.clinica
     form = ServicoForm(request.POST or None)
 
     if form.is_valid():
         servico = form.save(commit=False)
-        servico.clinica = request.user.clinica
+        servico.clinica = clinica
         servico.save()
         return redirect('servico_list')
 
     return render(request, 'clinica/servico_form.html', {'form': form})
 
 @login_required
+@permission_required("agendamentos.gerenciar_profissionais", raise_exception=True)
 def profissional_update(request, pk):
+    clinica = request.user.usuarioclinica.clinica
+
     profissional = get_object_or_404(
         Profissional,
         pk=pk,
-        clinica=request.user.clinica
+        clinica=clinica
     )
 
     form = ProfissionalForm(request.POST or None, instance=profissional)
 
+    # garante que só apareçam serviços da clínica
+    form.fields["servicos"].queryset = Servico.objects.filter(
+        clinica=clinica
+    )
+
     if form.is_valid():
         form.save()
-        return redirect('profissional_list')
+        messages.success(
+            request,
+            "✅ Profissional atualizado com sucesso."
+        )
+        return redirect("profissional_list")
 
     return render(
         request,
-        'clinica/profissional_form.html',
-        {'form': form}
+        "clinica/profissional_form.html",
+        {"form": form}
     )
 
 @login_required
+@permission_required("agendamentos.gerenciar_servicos", raise_exception=True)
 def servico_update(request, pk):
-    servico = get_object_or_404(Servico, pk=pk, clinica=request.user.clinica)
+    clinica = request.user.usuarioclinica.clinica
+
+    servico = get_object_or_404(
+        Servico,
+        pk=pk,
+        clinica=clinica
+    )
 
     form = ServicoForm(request.POST or None, instance=servico)
 
     if form.is_valid():
         form.save()
-        return redirect('clinica_dashboard')
-
-    return render(request, 'clinica/servico_form.html', {'form': form})
-
-@login_required
-def servico_list(request):
-    servicos = Servico.objects.filter(
-        clinica=request.user.clinica
-    ).order_by('nome')
+        messages.success(
+            request,
+            "✅ Serviço atualizado com sucesso."
+        )
+        return redirect("servico_list")
 
     return render(
         request,
-        'clinica/servico_list.html',
-        {'servicos': servicos}
+        "clinica/servico_form.html",
+        {"form": form}
     )
+
+@login_required
+@permission_required("agendamentos.gerenciar_servicos", raise_exception=True)
+def servico_list(request):
+    clinica = request.user.usuarioclinica.clinica
+    servicos = Servico.objects.filter(clinica=clinica)
+    return render(request, "clinica/servico_list.html", {"servicos": servicos})
     
 @login_required
+@permission_required("agendamentos.gerenciar_profissionais", raise_exception=True)
 def profissional_list(request):
-
-    if not hasattr(request.user, 'clinica'):
-        return redirect('profissional_list')
-
-    profissionais = Profissional.objects.filter(
-        clinica=request.user.clinica
-    ).prefetch_related('servicos').order_by('nome')
-
+    clinica = request.user.usuarioclinica.clinica
+    profissionais = Profissional.objects.filter(clinica=clinica)
     return render(
         request,
-        'clinica/profissional_list.html',
-        {'profissionais': profissionais}
+        "clinica/profissional_list.html",
+        {"profissionais": profissionais}
     )
 
 @login_required
+@permission_required("agendamentos.gerenciar_profissionais", raise_exception=True)
 @require_POST
 def profissional_delete(request, pk):
-
-    if not hasattr(request.user, 'clinica'):
-        return redirect('clinica_dashboard')
+    clinica = request.user.usuarioclinica.clinica
 
     profissional = get_object_or_404(
         Profissional,
         pk=pk,
-        clinica=request.user.clinica
+        clinica=clinica
     )
 
     profissional.delete()
-    return redirect('profissional_list')
+
+    messages.success(
+        request,
+        "🗑️ Profissional excluído com sucesso."
+    )
+
+    return redirect("profissional_list")
 
 @login_required
+@permission_required("agendamentos.gerenciar_servicos", raise_exception=True)
 @require_POST
 def servico_delete(request, pk):
-
-    if not hasattr(request.user, 'clinica'):
-        return redirect('clinica_dashboard')
+    clinica = request.user.usuarioclinica.clinica
 
     servico = get_object_or_404(
         Servico,
         pk=pk,
-        clinica=request.user.clinica
+        clinica=clinica
     )
 
     servico.delete()
-    return redirect('servico_list')
+
+    messages.success(
+        request,
+        "🗑️ Serviço excluído com sucesso."
+    )
+
+    return redirect("servico_list")
     
 
 

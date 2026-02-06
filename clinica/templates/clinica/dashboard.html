@@ -17,9 +17,12 @@
                     <p class="card-text">
                         Gerencie os profissionais da clínica
                     </p>
-                    <a href="{% url 'profissional_create' %}" class="btn btn-primary">
-                        ➕ Adicionar Profissional
-                    </a>
+                    {% if perms.agendamentos.gerenciar_profissionais %}
+                        <a href="{% url 'profissional_create' %}"
+                        class="btn btn-primary">
+                            ➕ Novo Profissional
+                        </a>
+                    {% endif %}
                 </div>
             </div>
         </div>
@@ -32,9 +35,13 @@
                     <p class="card-text">
                         Cadastre e organize os serviços
                     </p>
-                    <a href="{% url 'servico_create' %}" class="btn btn-success">
-                        ➕ Adicionar Serviço
-                    </a>
+                    {% if perms.agendamentos.gerenciar_servicos %}
+                        <a href="{% url 'servico_create' %}"
+                        class="btn btn-success">
+                            ➕ Novo Serviço
+                        </a>
+                    {% endif %}
+
                 </div>
             </div>
         </div>
@@ -80,8 +87,22 @@
                             <button class="btn btn-sm btn-danger">Excluir</button>
                         </form>
                     {% else %}
-                        <button class="btn btn-sm btn-warning" disabled>Editar</button>
-                        <button class="btn btn-sm btn-danger" disabled>Excluir</button>
+                        {% if perms.agendamentos.gerenciar_agendamentos %}
+                        <a href="{% url 'agendamento_edit' a.id %}"
+                        class="btn btn-sm btn-warning">
+                            Editar
+                        </a>
+
+                        <form action="{% url 'agendamento_delete' a.id %}"
+                            method="post"
+                            style="display:inline;">
+                            {% csrf_token %}
+                            <button class="btn btn-sm btn-danger">
+                                Excluir
+                            </button>
+                        </form>
+                    {% endif %}
+
                     {% endif %}
                 </td>
             </tr>

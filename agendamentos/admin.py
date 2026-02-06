@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Clinica, Profissional, Servico, Paciente, Agendamento, Prontuario
+from .models import Clinica, Profissional, Servico, Paciente, Agendamento, Prontuario, UsuarioClinica
 from .models import WhatsappLog
 
 @admin.register(Clinica)
@@ -32,3 +32,5 @@ class WhatsappLogAdmin(admin.ModelAdmin):
     list_filter = ("tipo", "clinica")
     search_fields = ("telefone",)
 
+
+admin.site.register(UsuarioClinica)

@@ -1,5 +1,6 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.decorators import login_required, permission_required
 from .models import Paciente, Servico, Profissional, Clinica, Agendamento, Disponibilidade
 from agendamentos.utils import (pode_enviar_whatsapp,registrar_envio_whatsapp, enviar_whatsapp)
 from django.views.generic import TemplateView
@@ -7,7 +8,7 @@ from agendamentos.models import WhatsappLog
 from datetime import datetime, timedelta, date
 from django.views.decorators.http import require_POST
 from django.contrib import messages
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 import json
 
@@ -311,19 +312,28 @@ def clinica_home(request, clinica_slug):
     return render(request, "agendamentos/clinica_home.html", {"clinica": clinica})
 
 
+"""@login_required
+@permission_required("agendamentos.gerenciar_agendamentos", raise_exception=True)
 def agendamento_edit(request, pk):
-    agendamento = get_object_or_404(Agendamento, pk=pk)
+    # 🔑 Clínica correta via UsuarioClinica (ADMIN / RECEPÇÃO)
+    clinica = request.user.usuarioclinica.clinica
+
+    # 🔍 Agendamento da clínica
+    agendamento = get_object_or_404(
+        Agendamento,
+        pk=pk,
+        clinica=clinica
+    )
 
     hoje = timezone.now().date()
 
+    # 🔒 Não permite editar agendamento passado
     if agendamento.data < hoje:
         messages.error(
             request,
             "❌ Não é possível editar um agendamento já realizado."
         )
         return redirect("clinica_dashboard")
-
-    horarios_disponiveis = []
 
     if request.method == "POST":
         data = request.POST.get("data")
@@ -333,6 +343,30 @@ def agendamento_edit(request, pk):
             messages.error(request, "Preencha todos os campos.")
             return redirect("agendamento_edit", pk=pk)
 
+        # 🔥 Converte string → date / time
+        try:
+            data = datetime.strptime(data, "%Y-%m-%d").date()
+            horario = datetime.strptime(horario, "%H:%M").time()
+        except ValueError:
+            messages.error(request, "Data ou horário inválido.")
+            return redirect("agendamento_edit", pk=pk)
+
+        # 🔒 Verifica conflito (outro agendamento no mesmo horário)
+        conflito = Agendamento.objects.filter(
+            clinica=clinica,
+            profissional=agendamento.profissional,
+            data=data,
+            horario=horario
+        ).exclude(pk=agendamento.pk).exists()
+
+        if conflito:
+            messages.error(
+                request,
+                "❌ Este horário já está ocupado. Escolha outro."
+            )
+            return redirect("agendamento_edit", pk=pk)
+
+        # ✅ Salva alteração
         agendamento.data = data
         agendamento.horario = horario
         agendamento.save()
@@ -343,7 +377,11 @@ def agendamento_edit(request, pk):
         )
         return redirect("clinica_dashboard")
 
-    return render(request, "agendamentos/agendamento_edit.html", {
-        "agendamento": agendamento,
-        "horarios": horarios_disponiveis
-    })
+    # GET
+    return render(
+        request,
+        "agendamentos/agendamento_edit.html",
+        {
+            "agendamento": agendamento
+        }
+    )"""

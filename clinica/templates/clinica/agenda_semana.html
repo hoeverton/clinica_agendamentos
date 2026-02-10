@@ -1,0 +1,48 @@
+{% extends "clinica/base.html" %}
+
+{% block content %}
+<h3 class="mb-4">
+    📆 Agenda da semana ({{ hoje|date:"d/m" }} a {{ fim_semana|date:"d/m" }})
+</h3>
+
+{% if agendamentos %}
+<table class="table table-bordered table-sm">
+    <thead class="table-light">
+        <tr>
+            <th>Data</th>
+            <th>Horário</th>
+            <th>Paciente</th>
+            <th>Serviço</th>
+            <th>Profissional</th>
+            <th>Ações</th>
+        </tr>
+    </thead>
+    <tbody>
+    {% for a in agendamentos %}
+        <tr>
+            <td>{{ a.data|date:"d/m/Y" }}</td>
+            <td>{{ a.horario|time:"H:i" }}</td>
+            <td>{{ a.paciente.nome }}</td>
+            <td>{{ a.servico }}</td>
+            <td>{{ a.profissional }}</td>
+            <td>
+                {% if perms.agendamentos.gerenciar_agendamentos %}
+                    <a href="{% url 'agendamento_edit' a.id %}" class="btn btn-sm btn-warning">
+                        ✏️ Editar
+                    </a>
+                {% else %}
+                    <span class="text-muted">Somente leitura</span>
+                {% endif %}
+            </td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p class="text-muted">Nenhum agendamento para esta semana.</p>
+{% endif %}
+
+<a href="{% url 'clinica_dashboard' %}" class="btn btn-secondary mt-3">
+    ⬅ Voltar ao dashboard
+</a>
+{% endblock %}

@@ -50,75 +50,72 @@ class ClinicaLoginView(View):
 
         return render(request, self.template_name, {"error": "Credenciais inválidas"})
 
-class ClinicaDashboardView(
-    LoginRequiredMixin,
-   
-    TemplateView
-):
+class ClinicaDashboardView(LoginRequiredMixin, TemplateView):
     template_name = "clinica/dashboard.html"
     login_url = "/clinica/login/"
-    permission_required = "agendamentos.ver_dashboard"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
-        # 🔑 1️⃣ Clínica do usuário (NOVO PADRÃO)
+        # 🔑 Clínica vinculada ao usuário
         clinica = self.request.user.usuarioclinica.clinica
 
-        # 🔑 2️⃣ Plano
-        plano = clinica.plano if clinica else None
-
-        # 🔑 3️⃣ Datas
+        # 📅 Datas base
         agora = timezone.now()
         hoje = agora.date()
         amanha = hoje + timedelta(days=1)
+        fim_semana = hoje + timedelta(days=7)
 
-        # 🔑 4️⃣ WhatsApp usados no mês (SOMENTE da clínica)
+        # 📊 WhatsApp usados no mês
         whatsapp_usados = WhatsappLog.objects.filter(
             clinica=clinica,
             data__month=agora.month,
             data__year=agora.year
         ).count()
 
-        # 🔑 5️⃣ Limite WhatsApp
-        if plano and plano.max_whatsapp_mes is None:
-            whatsapp_limite = None  # ilimitado
-        elif plano:
-            whatsapp_limite = plano.max_whatsapp_mes + clinica.whatsapp_extra
-        else:
-            whatsapp_limite = 0
-
-        # 🔑 6️⃣ Agendamentos da clínica
+        # 📅 TODOS os agendamentos da clínica
         agendamentos = Agendamento.objects.filter(
             clinica=clinica
         ).select_related(
-            "clinica",
-            "profissional",
             "paciente",
+            "profissional",
             "servico"
         ).order_by("data", "horario")
 
-        # 🔑 7️⃣ Regra única de edição
+        # 🔒 Regra única de edição
         for a in agendamentos:
             a.pode_editar = a.data >= hoje
 
-        # 🔑 8️⃣ Sublistas
+        # 📌 Agendamentos de hoje
         agendamentos_hoje = [a for a in agendamentos if a.data == hoje]
+
+        # ⏭️ Agendamentos de amanhã
         agendamentos_amanha = [a for a in agendamentos if a.data == amanha]
 
-        # 🔑 9️⃣ Contexto final
+        # 📆 Agendamentos da semana (exclui hoje e amanhã)
+        agendamentos_semana = Agendamento.objects.filter(
+            clinica=clinica,
+            data__gt=amanha,
+            data__lte=fim_semana
+        ).select_related(
+            "paciente",
+            "profissional",
+            "servico"
+        ).order_by("data", "horario")
+
+        # 🧠 Contexto final
         context.update({
             "clinica": clinica,
             "agendamentos": agendamentos,
             "agendamentos_hoje": agendamentos_hoje,
             "agendamentos_amanha": agendamentos_amanha,
+            "agendamentos_semana": agendamentos_semana,
             "today": hoje,
+            "fim_semana": fim_semana,
             "whatsapp_usados": whatsapp_usados,
-            "whatsapp_limite": whatsapp_limite,
         })
 
         return context
-
 
 
 
@@ -843,6 +840,32 @@ def servico_delete(request, pk):
     )
 
     return redirect("servico_list")
+
+@login_required
+def agenda_semana(request):
+    clinica = request.user.usuarioclinica.clinica
+
+    hoje = timezone.now().date()
+    fim_semana = hoje + timedelta(days=7)
+
+    agendamentos = Agendamento.objects.filter(
+        clinica=clinica,
+        data__gte=hoje,
+        data__lte=fim_semana
+    ).select_related(
+        "paciente", "profissional", "servico"
+    ).order_by("data", "horario")
+
+    return render(
+        request,
+        "clinica/agenda_semana.html",
+        {
+            "agendamentos": agendamentos,
+            "hoje": hoje,
+            "fim_semana": fim_semana,
+        }
+    )
+
     
 
 

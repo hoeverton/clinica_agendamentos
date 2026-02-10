@@ -157,8 +157,17 @@
         {% endfor %}
         </tbody>
     </table>
+    
 {% else %}
     <p class="text-muted">Nenhum agendamento amanhã.</p>
 {% endif %}
+{% if agendamentos_semana %}
+    <div class="mt-3">
+        <a href="{% url 'agenda_semana' %}" class="btn btn-outline-primary">
+            📆 Ver agendamentos da semana
+        </a>
+    </div>
+{% endif %}
+
 
 {% endblock %}

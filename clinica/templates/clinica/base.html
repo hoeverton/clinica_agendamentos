@@ -2,6 +2,9 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    
+    
     <title>{% block title %}Clínica{% endblock %}</title>
 
     <link rel="stylesheet"
@@ -10,27 +13,31 @@
     <style>
         body {
             min-height: 100vh;
+            overflow-x: hidden;
         }
 
-        .sidebar {
+        /* ===== Sidebar Desktop ===== */
+        .sidebar-desktop {
             width: 240px;
             min-height: 100vh;
             background-color: #f8f9fa;
             border-right: 1px solid #dee2e6;
         }
 
-        .sidebar a {
+        .sidebar-desktop a,
+        .offcanvas a {
             text-decoration: none;
             color: #333;
         }
 
-        .sidebar a.nav-link.active {
+        .sidebar-desktop a:hover,
+        .offcanvas a:hover {
             background-color: #e9ecef;
-            font-weight: 500;
         }
 
-        .sidebar a:hover {
+        .sidebar-desktop .nav-link.active {
             background-color: #e9ecef;
+            font-weight: 500;
         }
 
         input[type="password"] {
@@ -43,135 +50,66 @@
 </head>
 <body>
 
+<!-- ===== NAVBAR MOBILE ===== -->
+<nav class="navbar navbar-light bg-light d-lg-none">
+    <div class="container-fluid">
+        <button class="btn btn-outline-secondary"
+                type="button"
+                data-bs-toggle="offcanvas"
+                data-bs-target="#sidebarMobile">
+            ☰
+        </button>
+
+        <span class="navbar-brand mb-0 h6">
+            {{ clinica.nome }}
+        </span>
+    </div>
+</nav>
+
 <div class="d-flex">
 
-    <!-- MENU LATERAL -->
-    <aside class="sidebar p-3">
+    <!-- ===== SIDEBAR DESKTOP ===== -->
+    <aside class="sidebar-desktop p-3 d-none d-lg-block">
 
-        <!-- CLÍNICA ATIVA -->
         <h5 class="mb-1">🏥 {{ clinica.nome }}</h5>
         <small class="text-muted">Clínica ativa</small>
 
-        <!-- BARRA DE WHATSAPP -->
-        {% if whatsapp_limite %}
-            <div class="mt-3 mb-3">
-                <small class="text-muted d-block mb-1">📲 WhatsApp</small>
+        <hr>
 
-                <div class="progress" style="height: 8px;">
-                    <div class="progress-bar
-                        {% if whatsapp_percentual >= 100 %}
-                            bg-danger
-                        {% elif whatsapp_percentual >= 80 %}
-                            bg-warning
-                        {% else %}
-                            bg-success
-                        {% endif %}"
-                        style="width: {{ whatsapp_percentual }}%">
-                    </div>
-                </div>
+        {% include "clinica/menu.html" %}
 
-                <small class="text-muted">
-                    {{ whatsapp_usados }}/{{ whatsapp_limite }}
-                </small>
-            </div>
-        {% else %}
-            <small class="text-muted d-block mt-3 mb-3">
-                📲 WhatsApp ilimitado
-            </small>
-        {% endif %}
-
-        <!-- MENU -->
-       <ul class="nav nav-pills flex-column gap-1">
-
-            {# 🏠 DASHBOARD #}
-            {% if perms.agendamentos.ver_dashboard %}
-            <li class="nav-item">
-                <a href="{% url 'clinica_dashboard' %}" class="nav-link">
-                    🏠 Dashboard
-                </a>
-            </li>
-            {% endif %}
-
-            {# 📅 AGENDAMENTOS / DISPONIBILIDADES #}
-            {% if perms.agendamentos.gerenciar_agendamentos %}
-            <li class="nav-item">
-                <a href="{% url 'disponibilidade_list' %}" class="nav-link">
-                    📅 Disponibilidades
-                </a>
-            </li>
-            {% endif %}
-            <li class="nav-item">
-                <a href="{% url 'agenda_semana' %}" class="nav-link">
-                    📆 Agendamentos da semana
-                </a>
-            </li>
-        
-    
-
-            {# 🦷 SERVIÇOS #}
-            {% if perms.agendamentos.gerenciar_servicos %}
-            <li class="nav-item">
-                <a href="{% url 'servico_list' %}" class="nav-link">
-                    🦷 Serviços
-                </a>
-            </li>
-            {% endif %}
-
-            {# 👩‍⚕️ PROFISSIONAIS #}
-            {% if perms.agendamentos.gerenciar_profissionais %}
-            <li class="nav-item">
-                <a href="{% url 'profissional_list' %}" class="nav-link">
-                    👩‍⚕️ Profissionais
-                </a>
-            </li>
-            {% endif %}
-
-            {# 📊 RELATÓRIOS #}
-            {% if perms.agendamentos.ver_relatorios %}
-            <li class="nav-item">
-                <a href="{% url 'relatorio_agendamentos_html' %}" class="nav-link">
-                    📊 Relatórios
-                </a>
-            </li>
-            {% endif %}
-
-            <hr class="my-3">
-
-            {# 💳 PLANOS — SOMENTE ADMINISTRADOR #}
-            {% if perms.agendamentos.gerenciar_profissionais %}
-            <li class="nav-item">
-                <a href="{% url 'planos' %}" class="nav-link">
-                    💳 Planos
-                </a>
-            </li>
-            {% endif %}
-
-            {# 👤 MINHA CONTA (todos logados) #}
-            <li class="nav-item">
-                <a href="{% url 'minha_conta' %}" class="nav-link">
-                    👤 Minha Conta
-                </a>
-            </li>
-
-            {# 🚪 SAIR #}
-            <li class="nav-item mt-2">
-                <form action="{% url 'clinica_logout' %}" method="post">
-                    {% csrf_token %}
-                    <button type="submit" class="nav-link text-danger btn btn-link p-0">
-                        🚪 Sair
-                    </button>
-                </form>
-            </li>
-
-        </ul>
     </aside>
 
-    <!-- CONTEÚDO PRINCIPAL -->
-    <main class="flex-grow-1 p-4 bg-light">
+    <!-- ===== CONTEÚDO PRINCIPAL ===== -->
+    <main class="flex-grow-1 p-3 p-md-4 bg-light" style="min-width:0;">
+                
         {% block content %}{% endblock %}
     </main>
 
 </div>
 
+<!-- ===== SIDEBAR MOBILE (OFFCANVAS) ===== -->
+<div class="offcanvas offcanvas-start d-lg-none"
+     tabindex="-1"
+     id="sidebarMobile">
+
+    <div class="offcanvas-header">
+        <h5 class="offcanvas-title">
+            🏥 {{ clinica.nome }}
+        </h5>
+        <button type="button"
+                class="btn-close"
+                data-bs-dismiss="offcanvas">
+        </button>
+    </div>
+
+    <div class="offcanvas-body">
+
+        {% include "clinica/menu.html" %}
+
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

@@ -1,0 +1,66 @@
+<ul class="nav nav-pills flex-column gap-1">
+
+    {% if perms.agendamentos.ver_dashboard %}
+    <li class="nav-item">
+        <a href="{% url 'clinica_dashboard' %}" class="nav-link">
+            🏠 Dashboard
+        </a>
+    </li>
+    {% endif %}
+
+    {% if perms.agendamentos.gerenciar_agendamentos %}
+    <li class="nav-item">
+        <a href="{% url 'disponibilidade_list' %}" class="nav-link">
+            📅 Disponibilidades
+        </a>
+    </li>
+    {% endif %}
+
+    <li class="nav-item">
+        <a href="{% url 'agenda_semana' %}" class="nav-link">
+            📆 Agendamentos da semana
+        </a>
+    </li>
+
+    {% if perms.agendamentos.gerenciar_servicos %}
+    <li class="nav-item">
+        <a href="{% url 'servico_list' %}" class="nav-link">
+            🦷 Serviços
+        </a>
+    </li>
+    {% endif %}
+
+    {% if perms.agendamentos.gerenciar_profissionais %}
+    <li class="nav-item">
+        <a href="{% url 'profissional_list' %}" class="nav-link">
+            👩‍⚕️ Profissionais
+        </a>
+    </li>
+    {% endif %}
+
+    {% if perms.agendamentos.ver_relatorios %}
+    <li class="nav-item">
+        <a href="{% url 'relatorio_agendamentos_html' %}" class="nav-link">
+            📊 Relatórios
+        </a>
+    </li>
+    {% endif %}
+
+    <hr class="my-3">
+
+    <li class="nav-item">
+        <a href="{% url 'minha_conta' %}" class="nav-link">
+            👤 Minha Conta
+        </a>
+    </li>
+
+    <li class="nav-item mt-2">
+        <form action="{% url 'clinica_logout' %}" method="post">
+            {% csrf_token %}
+            <button type="submit" class="nav-link text-danger btn btn-link p-0">
+                🚪 Sair
+            </button>
+        </form>
+    </li>
+
+</ul>

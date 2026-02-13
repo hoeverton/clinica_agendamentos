@@ -1,17 +1,19 @@
 {% extends "clinica/base.html" %}
 
-
 {% block title %}Dashboard{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <h2 class="mb-4">Dashboard</h2>
 
-    <div class="row">
+<div class="container-fluid px-0 mt-3">
+
+    <h2 class="mb-4">📊 Dashboard</h2>
+
+    <!-- ================= CARDS ================= -->
+    <div class="row g-3">
 
         <!-- Card Profissionais -->
-        <div class="col-md-6">
-            <div class="card shadow-sm">
+        <div class="col-12 col-md-6">
+            <div class="card shadow-sm h-100">
                 <div class="card-body text-center">
                     <h5 class="card-title">Profissionais</h5>
                     <p class="card-text">
@@ -19,7 +21,7 @@
                     </p>
                     {% if perms.agendamentos.gerenciar_profissionais %}
                         <a href="{% url 'profissional_create' %}"
-                        class="btn btn-primary">
+                           class="btn btn-primary w-100 w-md-auto">
                             ➕ Novo Profissional
                         </a>
                     {% endif %}
@@ -28,8 +30,8 @@
         </div>
 
         <!-- Card Serviços -->
-        <div class="col-md-6">
-            <div class="card shadow-sm">
+        <div class="col-12 col-md-6">
+            <div class="card shadow-sm h-100">
                 <div class="card-body text-center">
                     <h5 class="card-title">Serviços</h5>
                     <p class="card-text">
@@ -37,137 +39,131 @@
                     </p>
                     {% if perms.agendamentos.gerenciar_servicos %}
                         <a href="{% url 'servico_create' %}"
-                        class="btn btn-success">
+                           class="btn btn-success w-100 w-md-auto">
                             ➕ Novo Serviço
                         </a>
                     {% endif %}
-
                 </div>
             </div>
         </div>
 
     </div>
+
+    <!-- ================= HOJE ================= -->
+    <h4 class="mt-5">📌 Agendamentos de Hoje</h4>
+
+    {% if agendamentos_hoje %}
+        <div class="table-responsive">
+            <table class="table table-bordered table-sm align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>Horário</th>
+                        <th>Paciente</th>
+                        <th>Telefone</th>
+                        <th>Serviço</th>
+                        <th>Profissional</th>
+                        <th style="min-width:150px;">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for a in agendamentos_hoje %}
+                        <tr>
+                            <td>{{ a.horario|time:"H:i" }}</td>
+                            <td>{{ a.paciente.nome }}</td>
+                            <td>{{ a.paciente.telefone }}</td>
+                            <td>{{ a.servico }}</td>
+                            <td>{{ a.profissional }}</td>
+                            <td>
+                                {% if a.pode_editar and perms.agendamentos.gerenciar_agendamentos %}
+                                    <a href="{% url 'agendamento_edit' a.id %}"
+                                       class="btn btn-sm btn-warning mb-1">
+                                        Editar
+                                    </a>
+
+                                    <form action="{% url 'agendamento_delete' a.id %}"
+                                          method="post"
+                                          style="display:inline;"
+                                          onsubmit="return confirm('Deseja realmente excluir este agendamento?')">
+                                        {% csrf_token %}
+                                        <button class="btn btn-sm btn-danger">
+                                            Excluir
+                                        </button>
+                                    </form>
+                                {% else %}
+                                    <span class="text-muted">—</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <p class="text-muted">Nenhum agendamento hoje.</p>
+    {% endif %}
+
+    <!-- ================= AMANHÃ ================= -->
+    <h4 class="mt-5">⏭️ Agendamentos de Amanhã</h4>
+
+    {% if agendamentos_amanha %}
+        <div class="table-responsive">
+            <table class="table table-bordered table-sm align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>Horário</th>
+                        <th>Paciente</th>
+                        <th>Telefone</th>
+                        <th>Serviço</th>
+                        <th>Profissional</th>
+                        <th style="min-width:150px;">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for a in agendamentos_amanha %}
+                        <tr>
+                            <td>{{ a.horario|time:"H:i" }}</td>
+                            <td>{{ a.paciente.nome }}</td>
+                            <td>{{ a.paciente.telefone }}</td>
+                            <td>{{ a.servico }}</td>
+                            <td>{{ a.profissional }}</td>
+                            <td>
+                                {% if a.pode_editar and perms.agendamentos.gerenciar_agendamentos %}
+                                    <a href="{% url 'agendamento_edit' a.id %}"
+                                       class="btn btn-sm btn-warning mb-1">
+                                        Editar
+                                    </a>
+
+                                    <form action="{% url 'agendamento_delete' a.id %}"
+                                          method="post"
+                                          style="display:inline;">
+                                        {% csrf_token %}
+                                        <button class="btn btn-sm btn-danger">
+                                            Excluir
+                                        </button>
+                                    </form>
+                                {% else %}
+                                    <span class="text-muted">—</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <p class="text-muted">Nenhum agendamento amanhã.</p>
+    {% endif %}
+
+    <!-- ================= BOTÃO SEMANA ================= -->
+    {% if agendamentos_semana %}
+        <div class="mt-4 text-center text-md-start">
+            <a href="{% url 'agenda_semana' %}"
+               class="btn btn-outline-primary w-100 w-md-auto">
+                📆 Ver agendamentos da semana
+            </a>
+        </div>
+    {% endif %}
+
 </div>
-
-<h2 class="mb-3">📊 Dashboard</h2>
-
-<!-- ================= HOJE ================= -->
-<h4 class="mt-4">📌 Agendamentos de Hoje</h4>
-
-{% if agendamentos_hoje %}
-    <table class="table table-bordered table-sm">
-        <thead class="table-light">
-        <tr>
-            <th>Horário</th>
-            <th>Paciente</th>
-            <th>Telefone</th>
-            <th>Serviço</th>
-            <th>Profissional</th>
-            <th width="160">Ações</th>
-        </tr>
-        </thead>
-        <tbody>
-        {% for a in agendamentos_hoje %}
-            <tr>
-                <td>{{ a.horario|time:"H:i" }}</td>
-                <td>{{ a.paciente.nome }}</td>
-                <td>{{ a.paciente.telefone }}</td>
-                <td>{{ a.servico }}</td>
-                <td>{{ a.profissional }}</td>
-                <td>
-                    {% if a.pode_editar %}
-                        <a href="{% url 'agendamento_edit' a.id %}"
-                           class="btn btn-sm btn-warning">Editar</a>
-
-                        <form action="{% url 'agendamento_delete' a.id %}"
-                              method="post"
-                              style="display:inline;"
-                              onsubmit="return confirm('Deseja realmente excluir este agendamento?')">
-                            {% csrf_token %}
-                            <button class="btn btn-sm btn-danger">Excluir</button>
-                        </form>
-                    {% else %}
-                        {% if perms.agendamentos.gerenciar_agendamentos %}
-                        <a href="{% url 'agendamento_edit' a.id %}"
-                        class="btn btn-sm btn-warning">
-                            Editar
-                        </a>
-
-                        <form action="{% url 'agendamento_delete' a.id %}"
-                            method="post"
-                            style="display:inline;">
-                            {% csrf_token %}
-                            <button class="btn btn-sm btn-danger">
-                                Excluir
-                            </button>
-                        </form>
-                    {% endif %}
-
-                    {% endif %}
-                </td>
-            </tr>
-        {% endfor %}
-        </tbody>
-    </table>
-{% else %}
-    <p class="text-muted">Nenhum agendamento hoje.</p>
-{% endif %}
-
-<!-- ================= AMANHÃ ================= -->
-<h4 class="mt-4">⏭️ Agendamentos de Amanhã</h4>
-
-{% if agendamentos_amanha %}
-    <table class="table table-bordered table-sm">
-        <thead class="table-light">
-        <tr>
-            <th>Horário</th>
-            <th>Paciente</th>
-            <th>Telefone</th>
-            <th>Serviço</th>
-            <th>Profissional</th>
-            <th width="160">Ações</th>
-        </tr>
-        </thead>
-        <tbody>
-        {% for a in agendamentos_amanha %}
-            <tr>
-                <td>{{ a.horario|time:"H:i" }}</td>
-                <td>{{ a.paciente.nome }}</td>
-                <td>{{ a.paciente.telefone }}</td>
-                <td>{{ a.servico }}</td>
-                <td>{{ a.profissional }}</td>
-                <td>
-                    {% if a.pode_editar %}
-                        <a href="{% url 'agendamento_edit' a.id %}"
-                           class="btn btn-sm btn-warning">Editar</a>
-
-                        <form action="{% url 'agendamento_delete' a.id %}"
-                              method="post"
-                              style="display:inline;"
-                              onsubmit="return confirm('Deseja realmente excluir este agendamento?')">
-                            {% csrf_token %}
-                            <button class="btn btn-sm btn-danger">Excluir</button>
-                        </form>
-                    {% else %}
-                        <button class="btn btn-sm btn-warning" disabled>Editar</button>
-                        <button class="btn btn-sm btn-danger" disabled>Excluir</button>
-                    {% endif %}
-                </td>
-            </tr>
-        {% endfor %}
-        </tbody>
-    </table>
-    
-{% else %}
-    <p class="text-muted">Nenhum agendamento amanhã.</p>
-{% endif %}
-{% if agendamentos_semana %}
-    <div class="mt-3">
-        <a href="{% url 'agenda_semana' %}" class="btn btn-outline-primary">
-            📆 Ver agendamentos da semana
-        </a>
-    </div>
-{% endif %}
-
 
 {% endblock %}

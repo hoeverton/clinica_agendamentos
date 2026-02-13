@@ -1,49 +1,94 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Disponibilidade</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
-</head>
-<body class="bg-light">
+{% extends "clinica/base.html" %}
 
-<div class="container mt-5 col-md-6">
-    <h3 class="mb-4">Cadastrar disponibilidade</h3>
+{% block title %}Cadastrar Disponibilidade{% endblock %}
 
-    <form method="POST" class="card p-4 shadow">
-        {% csrf_token %}
+{% block content %}
 
-        <label class="form-label">Profissional</label>
-        <select name="profissional" class="form-select" required>
-            {% for p in profissionais %}
-                <option value="{{ p.id }}">{{ p.nome }}</option>
-            {% endfor %}
-        </select>
+<div class="container-fluid mt-3">
 
-        <label class="form-label mt-3">Dias da semana</label>
-        {% for dia in dias_semana %}
-            <div class="form-check">
-                <input class="form-check-input" type="checkbox"
-                       name="dias_semana" value="{{ dia.0 }}">
-                <label class="form-check-label">
-                    {{ dia.1 }}
-                </label>
+    <div class="row justify-content-center">
+        <div class="col-12 col-md-8 col-lg-6">
+
+            <div class="card shadow-sm">
+                <div class="card-body">
+
+                    <h4 class="mb-4 text-center">
+                        📅 Cadastrar Disponibilidade
+                    </h4>
+
+                    <form method="POST">
+                        {% csrf_token %}
+
+                        <!-- Profissional -->
+                        <div class="mb-3">
+                            <label class="form-label">Profissional</label>
+                            <select name="profissional" class="form-select" required>
+                                {% for p in profissionais %}
+                                    <option value="{{ p.id }}">{{ p.nome }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <!-- Dias da semana -->
+                        <div class="mb-3">
+                            <label class="form-label d-block">Dias da Semana</label>
+
+                            <div class="row">
+                                {% for dia in dias_semana %}
+                                    <div class="col-12 col-sm-6">
+                                        <div class="form-check">
+                                            <input class="form-check-input"
+                                                   type="checkbox"
+                                                   name="dias_semana"
+                                                   value="{{ dia.0 }}">
+                                            <label class="form-check-label">
+                                                {{ dia.1 }}
+                                            </label>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <!-- Horários -->
+                        <div class="row">
+                            <div class="col-12 col-md-6 mb-3">
+                                <label class="form-label">Hora Início</label>
+                                <input type="time"
+                                       name="hora_inicio"
+                                       class="form-control"
+                                       required>
+                            </div>
+
+                            <div class="col-12 col-md-6 mb-3">
+                                <label class="form-label">Hora Fim</label>
+                                <input type="time"
+                                       name="hora_fim"
+                                       class="form-control"
+                                       required>
+                            </div>
+                        </div>
+
+                        <!-- Botões -->
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-3">
+                            <a href="{% url 'disponibilidade_list' %}"
+                               class="btn btn-secondary w-100 w-md-auto">
+                                Cancelar
+                            </a>
+
+                            <button class="btn btn-primary w-100 w-md-auto">
+                                💾 Salvar Disponibilidade
+                            </button>
+                        </div>
+
+                    </form>
+
+                </div>
             </div>
-        {% endfor %}
 
-        <label class="form-label mt-3">Hora início</label>
-        <input type="time" name="hora_inicio" class="form-control" required>
+        </div>
+    </div>
 
-        <label class="form-label mt-3">Hora fim</label>
-        <input type="time" name="hora_fim" class="form-control" required>
-
-        <button class="btn btn-primary w-100 mt-4">
-            Salvar disponibilidade
-        </button>
-        <a href="{% url 'disponibilidade_list' %}" class="btn btn-danger mt-4">
-            Voltar
-        </a>
-    </form>
 </div>
 
-</body>
-</html>
+{% endblock %}

@@ -6,6 +6,8 @@
 </h3>
 
 {% if agendamentos %}
+
+<div class="table-responsive">  <!-- 🔹 ADICIONADO -->
 <table class="table table-bordered table-sm">
     <thead class="table-light">
         <tr>
@@ -14,7 +16,7 @@
             <th>Paciente</th>
             <th>Serviço</th>
             <th>Profissional</th>
-            <th>Ações</th>
+            <th style="min-width:140px;">Ações</th> <!-- 🔹 pequena proteção -->
         </tr>
     </thead>
     <tbody>
@@ -27,9 +29,20 @@
             <td>{{ a.profissional }}</td>
             <td>
                 {% if perms.agendamentos.gerenciar_agendamentos %}
-                    <a href="{% url 'agendamento_edit' a.id %}" class="btn btn-sm btn-warning">
+                    <a href="{% url 'agendamento_edit' a.id %}" 
+                       class="btn btn-sm btn-warning">
                         ✏️ Editar
                     </a>
+
+                    <form action="{% url 'agendamento_delete' a.id %}"
+                          method="post"
+                          style="display:inline;"
+                          onsubmit="return confirm('Deseja realmente excluir este agendamento?')">
+                        {% csrf_token %}
+                        <button class="btn btn-sm btn-danger">
+                            Excluir
+                        </button>
+                    </form>
                 {% else %}
                     <span class="text-muted">Somente leitura</span>
                 {% endif %}
@@ -38,6 +51,8 @@
     {% endfor %}
     </tbody>
 </table>
+</div> <!-- 🔹 ADICIONADO -->
+
 {% else %}
 <p class="text-muted">Nenhum agendamento para esta semana.</p>
 {% endif %}

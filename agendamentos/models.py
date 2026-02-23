@@ -127,19 +127,36 @@ class Disponibilidade(models.Model):
         return f"{self.profissional} - {self.get_dia_semana_display()} ({self.hora_inicio} às {self.hora_fim})"
 
 class Prontuario(models.Model):
-    clinica = models.ForeignKey(Clinica, on_delete=models.CASCADE)
-    paciente = models.ForeignKey(Paciente, on_delete=models.CASCADE)
+    clinica = models.ForeignKey(
+        Clinica,
+        on_delete=models.CASCADE,
+        related_name="prontuarios"
+    )
+
+    paciente = models.ForeignKey(
+        Paciente,
+        on_delete=models.CASCADE,
+        related_name="prontuarios"
+    )
+
     profissional = models.ForeignKey(
         Profissional,
         on_delete=models.SET_NULL,
-        null=True
+        null=True,
+        blank=True,
+        related_name="prontuarios_realizados"
     )
 
     data = models.DateTimeField(auto_now_add=True)
-    anotacoes = models.TextField()
+    anotacoes = models.TextField("Anotações clínicas")
+
+    class Meta:
+        ordering = ['-data']
+        verbose_name = "Prontuário"
+        verbose_name_plural = "Prontuários"
 
     def __str__(self):
-        return f"{self.paciente} - {self.data.strftime('%d/%m/%Y')}"
+        return f"{self.paciente.nome} - {self.data.strftime('%d/%m/%Y')}"
 
 class WhatsappLog(models.Model):
 

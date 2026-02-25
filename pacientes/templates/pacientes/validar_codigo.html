@@ -1,0 +1,6 @@
+<form method="post">
+  {% csrf_token %}
+  <input type="text" name="telefone" placeholder="Telefone" required>
+  <input type="text" name="codigo" placeholder="Código" required>
+  <button type="submit">Entrar</button>
+</form>

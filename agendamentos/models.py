@@ -3,6 +3,7 @@ from django.contrib.auth.models import User
 from django.utils.text import slugify
 from clinica.models import Plano
 from django.utils import timezone
+import random
 
 
 
@@ -78,6 +79,16 @@ class Servico(models.Model):
 class Paciente(models.Model):
     nome = models.CharField(max_length=100, blank=True, null=True)
     telefone = models.CharField(max_length=20, unique=True)
+
+    codigo_login = models.CharField(max_length=6, blank=True, null=True)
+    codigo_expira_em = models.DateTimeField(blank=True, null=True)
+    tentativas_codigo = models.IntegerField(default=0)
+
+    def gerar_codigo(self):
+        self.codigo_login = f"{random.randint(100000, 999999)}"
+        self.codigo_expira_em = timezone.now() + timezone.timedelta(minutes=5)
+        self.tentativas_codigo = 0
+        self.save()
 
     def __str__(self):
         return self.nome if self.nome else self.telefone

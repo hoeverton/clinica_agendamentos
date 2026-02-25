@@ -10,6 +10,9 @@ urlpatterns = [
     path("<slug:clinica_slug>/data-horario/", views.passo4_data_horario, name="passo4_data_horario"),
     path("<slug:clinica_slug>/confirmar/", views.confirmar, name="confirmar"),
     path("<slug:clinica_slug>/sucesso/", views.sucesso, name="sucesso"),
+    #path('paciente/<int:paciente_id>/prontuarios/', views.prontuario_list, name='prontuario_list'),
+    #path('paciente/<int:paciente_id>/prontuario/novo/', views.prontuario_create, name='prontuario_create'),
+    #path('agendamento/<int:pk>/finalizar/', views.finalizar_agendamento, name='finalizar_agendamento'),
     #path('clinica/<slug:slug>/dashboard/', views.ClinicaDashboardView.as_view(), name='clinica_dashboard'),
     #path("clinica/dashboard/", views.ClinicaDashboardView.as_view(), name="clinica_dashboard"),
     

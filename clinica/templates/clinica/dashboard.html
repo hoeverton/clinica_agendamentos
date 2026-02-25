@@ -6,7 +6,7 @@
 
 <div class="container-fluid px-0 mt-3">
 
-    <h2 class="mb-4">📊 Dashboard</h2>
+    <h2 class="mb-4">📊 Dashboard </h2>
 
     <!-- ================= CARDS ================= -->
     <div class="row g-3">
@@ -79,6 +79,10 @@
                                        class="btn btn-sm btn-warning mb-1">
                                         Editar
                                     </a>
+                                    <a href="{% url 'prontuario_paciente' a.paciente.id %}"
+                                       class="btn btn-sm btn-info mb-1 text-white">
+                                        Prontuário
+                                    </a>
 
                                     <form action="{% url 'agendamento_delete' a.id %}"
                                           method="post"
@@ -131,6 +135,10 @@
                                     <a href="{% url 'agendamento_edit' a.id %}"
                                        class="btn btn-sm btn-warning mb-1">
                                         Editar
+                                    </a>
+                                    <a href="{% url 'prontuario_paciente' a.paciente.id %}"
+                                       class="btn btn-sm btn-info mb-1 text-white">
+                                        Prontuário
                                     </a>
 
                                     <form action="{% url 'agendamento_delete' a.id %}"

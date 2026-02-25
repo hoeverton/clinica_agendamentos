@@ -21,6 +21,13 @@
             📆 Agendamentos da semana
         </a>
     </li>
+    {% if perms.agendamentos.gerenciar_agendamentos %}
+    <li class="nav-item">
+        <a href="{% url 'prontuario_busca' %}" class="nav-link">
+            🗂️ Prontuário
+        </a>
+    </li>
+    {% endif %}
 
     {% if perms.agendamentos.gerenciar_servicos %}
     <li class="nav-item">

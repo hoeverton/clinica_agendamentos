@@ -23,6 +23,8 @@ from django.shortcuts import get_object_or_404
 from datetime import datetime, timedelta
 from agendamentos.models import Profissional, Servico
 from django.views.decorators.http import require_POST
+from agendamentos.models import Paciente,Prontuario
+from django.db.models import Q
 from .forms import ProfissionalForm, ServicoForm
 from agendamentos.utils import (
     pode_enviar_whatsapp,
@@ -867,5 +869,90 @@ def agenda_semana(request):
     )
 
     
+@login_required
+@permission_required("agendamentos.gerenciar_agendamentos", raise_exception=True)
+def prontuario_paciente(request, paciente_id):
+    clinica = request.user.usuarioclinica.clinica
 
+    paciente = get_object_or_404(
+        Paciente.objects.filter(
+            Q(agendamento__clinica=clinica) |
+            Q(prontuario__clinica=clinica)
+        ).distinct(),
+        pk=paciente_id
+    )
+
+    profissionais = Profissional.objects.filter(
+        clinica=clinica
+    ).order_by("nome")
+
+    if request.method == "POST":
+        anotacoes = request.POST.get("anotacoes", "").strip()
+        profissional_id = request.POST.get("profissional")
+
+        if not anotacoes:
+            messages.error(request, "❌ Descreva o atendimento realizado.")
+            return redirect("prontuario_paciente", paciente_id=paciente.id)
+
+        profissional = None
+        if profissional_id:
+            profissional = get_object_or_404(
+                Profissional,
+                pk=profissional_id,
+                clinica=clinica
+            )
+
+        Prontuario.objects.create(
+            clinica=clinica,
+            paciente=paciente,
+            profissional=profissional,
+            anotacoes=anotacoes
+        )
+
+        messages.success(request, "✅ Prontuário salvo com sucesso.")
+        return redirect("prontuario_paciente", paciente_id=paciente.id)
+
+    prontuarios = Prontuario.objects.filter(
+        clinica=clinica,
+        paciente=paciente
+    ).select_related("profissional")
+
+    return render(
+        request,
+        "clinica/prontuario_paciente.html",
+        {
+            "paciente": paciente,
+            "prontuarios": prontuarios,
+            "profissionais": profissionais,
+        }
+    )
+
+@login_required
+@permission_required("agendamentos.gerenciar_agendamentos", raise_exception=True)
+def prontuario_busca(request):
+    clinica = request.user.usuarioclinica.clinica
+    termo = request.GET.get("q", "").strip()
+
+    pacientes_ids = set(
+        Agendamento.objects.filter(clinica=clinica).values_list("paciente_id", flat=True)
+    )
+    pacientes_ids.update(
+        Prontuario.objects.filter(clinica=clinica).values_list("paciente_id", flat=True)
+    )
+
+    pacientes = Paciente.objects.filter(id__in=pacientes_ids)
+
+    if termo:
+        pacientes = pacientes.filter(nome__icontains=termo)
+
+    pacientes = pacientes.order_by("nome", "telefone")
+
+    return render(
+        request,
+        "clinica/prontuario_busca.html",
+        {
+            "pacientes": pacientes,
+            "termo": termo,
+        }
+    )
 

@@ -22,9 +22,7 @@ class PacienteAdmin(admin.ModelAdmin):
 class AgendamentoAdmin(admin.ModelAdmin):
     pass
 
-@admin.register(Prontuario)
-class ProntuarioAdmin(admin.ModelAdmin):
-    pass
+
 
 @admin.register(WhatsappLog)
 class WhatsappLogAdmin(admin.ModelAdmin):
@@ -32,5 +30,12 @@ class WhatsappLogAdmin(admin.ModelAdmin):
     list_filter = ("tipo", "clinica")
     search_fields = ("telefone",)
 
+
+
+@admin.register(Prontuario)
+class ProntuarioAdmin(admin.ModelAdmin):
+    list_display = ('paciente', 'profissional', 'data')
+    list_filter = ('data', 'profissional')
+    search_fields = ('paciente__nome',)
 
 admin.site.register(UsuarioClinica)

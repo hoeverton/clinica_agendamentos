@@ -1,0 +1,56 @@
+{% extends "clinica/base.html" %}
+
+{% block title %}Buscar prontuário{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-0 mt-3">
+    <h3 class="mb-4">🗂️ Prontuários</h3>
+
+    <form method="get" class="card shadow-sm mb-4">
+        <div class="card-body">
+            <label for="q" class="form-label">Buscar paciente por nome</label>
+            <div class="input-group">
+                <input
+                    type="text"
+                    name="q"
+                    id="q"
+                    class="form-control"
+                    placeholder="Digite o nome do paciente"
+                    value="{{ termo }}"
+                >
+                <button type="submit" class="btn btn-primary">Buscar</button>
+                <a href="{% url 'prontuario_busca' %}" class="btn btn-outline-secondary">Limpar</a>
+            </div>
+        </div>
+    </form>
+
+    {% if pacientes %}
+        <div class="table-responsive">
+            <table class="table table-bordered table-sm align-middle bg-white">
+                <thead class="table-light">
+                    <tr>
+                        <th>Paciente</th>
+                        <th>Telefone</th>
+                        <th style="min-width: 150px;">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for paciente in pacientes %}
+                        <tr>
+                            <td>{{ paciente.nome|default:"Sem nome" }}</td>
+                            <td>{{ paciente.telefone }}</td>
+                            <td>
+                                <a href="{% url 'prontuario_paciente' paciente.id %}" class="btn btn-sm btn-info text-white">
+                                    Ver prontuário
+                                </a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <p class="text-muted">Nenhum paciente encontrado com esse nome.</p>
+    {% endif %}
+</div>
+{% endblock %}

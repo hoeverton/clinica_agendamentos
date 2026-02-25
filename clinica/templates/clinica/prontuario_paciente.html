@@ -1,0 +1,74 @@
+{% extends "clinica/base.html" %}
+
+{% block title %}Prontuário do paciente{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-0 mt-3">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+        <h3 class="mb-0">🦷 Prontuário</h3>
+        <a href="{% url 'clinica_dashboard' %}" class="btn btn-outline-secondary btn-sm">
+            ⬅ Voltar ao dashboard
+        </a>
+    </div>
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <h5 class="mb-1">{{ paciente.nome|default:"Paciente sem nome" }}</h5>
+            <p class="text-muted mb-0">📱 {{ paciente.telefone }}</p>
+        </div>
+    </div>
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-header">Novo registro clínico</div>
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label for="profissional" class="form-label">Dentista responsável (opcional)</label>
+                    <select name="profissional" id="profissional" class="form-select">
+                        <option value="">Selecione</option>
+                        {% for profissional in profissionais %}
+                            <option value="{{ profissional.id }}">{{ profissional.nome }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label for="anotacoes" class="form-label">Descrição do trabalho realizado</label>
+                    <textarea
+                        name="anotacoes"
+                        id="anotacoes"
+                        class="form-control"
+                        rows="5"
+                        placeholder="Ex.: Restauração no dente 26, limpeza e orientações pós-procedimento."
+                        required
+                    ></textarea>
+                </div>
+
+                <button type="submit" class="btn btn-primary">
+                    💾 Salvar prontuário
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <h5 class="mb-3">Histórico do paciente</h5>
+    {% if prontuarios %}
+        <div class="list-group shadow-sm">
+            {% for item in prontuarios %}
+                <div class="list-group-item">
+                    <div class="d-flex justify-content-between flex-wrap gap-2">
+                        <strong>{{ item.data|date:"d/m/Y H:i" }}</strong>
+                        <span class="text-muted">
+                            {{ item.profissional.nome|default:"Dentista não informado" }}
+                        </span>
+                    </div>
+                    <p class="mb-0 mt-2">{{ item.anotacoes|linebreaksbr }}</p>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p class="text-muted">Nenhum prontuário cadastrado para este paciente.</p>
+    {% endif %}
+</div>
+{% endblock %}

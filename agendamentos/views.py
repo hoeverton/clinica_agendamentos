@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.decorators import login_required, permission_required
-from .models import Paciente, Servico, Profissional, Clinica, Agendamento, Disponibilidade
+from .models import Paciente, Servico, Profissional, Clinica, Agendamento, Disponibilidade, Prontuario
 from agendamentos.utils import (pode_enviar_whatsapp,registrar_envio_whatsapp, enviar_whatsapp)
 from django.views.generic import TemplateView
 from agendamentos.models import WhatsappLog
@@ -312,76 +312,78 @@ def clinica_home(request, clinica_slug):
     return render(request, "agendamentos/clinica_home.html", {"clinica": clinica})
 
 
-"""@login_required
-@permission_required("agendamentos.gerenciar_agendamentos", raise_exception=True)
-def agendamento_edit(request, pk):
-    # 🔑 Clínica correta via UsuarioClinica (ADMIN / RECEPÇÃO)
-    clinica = request.user.usuarioclinica.clinica
+@login_required
+def prontuario_list(request, paciente_id):
+    paciente = get_object_or_404(Paciente, id=paciente_id)
 
-    # 🔍 Agendamento da clínica
+    prontuarios = Prontuario.objects.filter(
+        paciente=paciente,
+        clinica=request.user.usuarioclinica.clinica
+    )
+
+    return render(request, "agendamentos/prontuario_list.html", {
+        "paciente": paciente,
+        "prontuarios": prontuarios
+    })
+
+
+
+@login_required
+def prontuario_create(request, paciente_id):
+    paciente = get_object_or_404(Paciente, id=paciente_id)
+
+    if request.method == "POST":
+        anotacoes = request.POST.get("anotacoes")
+
+        Prontuario.objects.create(
+            clinica=request.user.usuarioclinica.clinica,
+            paciente=paciente,
+            profissional=request.user.profissional,
+            anotacoes=anotacoes
+        )
+
+        return redirect("prontuario_list", paciente_id=paciente.id)
+
+    return render(request, "agendamentos/prontuario_form.html", {
+        "paciente": paciente
+    })
+
+@login_required
+def prontuario_edit(request, prontuario_id):
+    prontuario = get_object_or_404(
+        Prontuario,
+        id=prontuario_id,
+        clinica=request.user.usuarioclinica.clinica
+    )
+
+    if request.method == "POST":
+        prontuario.anotacoes = request.POST.get("anotacoes")
+        prontuario.save()
+        return redirect("clinica_dashboard")
+
+    return render(request, "agendamentos/prontuario_form.html", {
+        "prontuario": prontuario
+    })
+
+@login_required
+def finalizar_agendamento(request, pk):
     agendamento = get_object_or_404(
         Agendamento,
         pk=pk,
-        clinica=clinica
+        clinica=request.user.usuarioclinica.clinica
     )
 
-    hoje = timezone.now().date()
-
-    # 🔒 Não permite editar agendamento passado
-    if agendamento.data < hoje:
-        messages.error(
-            request,
-            "❌ Não é possível editar um agendamento já realizado."
-        )
-        return redirect("clinica_dashboard")
-
-    if request.method == "POST":
-        data = request.POST.get("data")
-        horario = request.POST.get("horario")
-
-        if not data or not horario:
-            messages.error(request, "Preencha todos os campos.")
-            return redirect("agendamento_edit", pk=pk)
-
-        # 🔥 Converte string → date / time
-        try:
-            data = datetime.strptime(data, "%Y-%m-%d").date()
-            horario = datetime.strptime(horario, "%H:%M").time()
-        except ValueError:
-            messages.error(request, "Data ou horário inválido.")
-            return redirect("agendamento_edit", pk=pk)
-
-        # 🔒 Verifica conflito (outro agendamento no mesmo horário)
-        conflito = Agendamento.objects.filter(
-            clinica=clinica,
-            profissional=agendamento.profissional,
-            data=data,
-            horario=horario
-        ).exclude(pk=agendamento.pk).exists()
-
-        if conflito:
-            messages.error(
-                request,
-                "❌ Este horário já está ocupado. Escolha outro."
-            )
-            return redirect("agendamento_edit", pk=pk)
-
-        # ✅ Salva alteração
-        agendamento.data = data
-        agendamento.horario = horario
+    if agendamento.status != "fechado":
+        agendamento.status = "fechado"
         agendamento.save()
 
-        messages.success(
-            request,
-            "✅ Agendamento atualizado com sucesso."
+        prontuario = Prontuario.objects.create(
+            clinica=agendamento.clinica,
+            paciente=agendamento.paciente,
+            profissional=agendamento.profissional,
+            agendamento=agendamento
         )
-        return redirect("clinica_dashboard")
 
-    # GET
-    return render(
-        request,
-        "agendamentos/agendamento_edit.html",
-        {
-            "agendamento": agendamento
-        }
-    )"""
+        return redirect("prontuario_edit", prontuario.id)
+
+    return redirect("clinica_dashboard")

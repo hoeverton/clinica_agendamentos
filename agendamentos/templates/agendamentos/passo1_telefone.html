@@ -12,33 +12,35 @@
     <form method="POST" class="card p-4 shadow">
         {% csrf_token %}
         
-        <div class="row">
-            <div class="col-12 mb-3">
-                <label class="form-label">Nome do Paciente:</label>
-                <input
-                    type="text"
-                    name="nome_paciente"
-                    placeholder="Ex: João da Silva"
-                    required >
-            </div>
-
-            <div class="col-12 mb-3">
-                <label class="form-label">Telefone:</label>
-                <input 
-                        type="text" 
-                        name="telefone" 
-                        class="form-control" 
-                        placeholder="(DDD) 9XXXX-XXXX" 
-                        required>
-            </div>  
-
+        <div class="col-12 mb-3">
+            <label class="form-label">Nome do Paciente:</label>
+            <input
+                type="text"
+                name="nome_paciente"
+                class="form-control"
+                placeholder="Ex: João da Silva"
+                required>
         </div>
 
-              
-        
+        <div class="col-12 mb-3">
+            <label class="form-label">Telefone:</label>
+            <input 
+                type="text" 
+                name="telefone" 
+                class="form-control" 
+                placeholder="(DDD) 9XXXX-XXXX" 
+                required>
+        </div>  
 
         <button class="btn btn-primary w-100 mt-3">Próximo</button>
     </form>
+
+    <!-- ACESSAR CONTA (DISCRETO) -->
+    <div class="text-center mt-3">
+        <a href="{% url 'solicitar_codigo' %}" class="text-muted small">
+            Já sou paciente • acessar minha conta
+        </a>
+    </div>
 </div>
 
 </body>

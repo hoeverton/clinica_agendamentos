@@ -10,7 +10,7 @@ def solicitar_codigo(request):
         telefone = request.POST.get("telefone")
 
         paciente = Paciente.objects.filter(telefone=telefone).first()
-
+        print("-----------------------")
         if paciente:
             paciente.gerar_codigo()
             # simulação de envio

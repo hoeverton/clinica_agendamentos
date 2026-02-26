@@ -4,13 +4,14 @@ from django.contrib.auth.decorators import login_required, permission_required
 from .models import Paciente, Servico, Profissional, Clinica, Agendamento, Disponibilidade, Prontuario
 from agendamentos.utils import (pode_enviar_whatsapp,registrar_envio_whatsapp, enviar_whatsapp)
 from django.views.generic import TemplateView
-from agendamentos.models import WhatsappLog
+from agendamentos.models import WhatsappLog,Paciente
 from datetime import datetime, timedelta, date
 from django.views.decorators.http import require_POST
 from django.contrib import messages
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 import json
+import re
 
 
 
@@ -21,16 +22,21 @@ def passo1_telefone(request, clinica_slug):
     if request.method == "POST":
         nome =request.POST.get("nome_paciente")
         telefone = request.POST.get("telefone")
+        # normaliza telefone
+        telefone = re.sub(r"\D", "", telefone)
 
         if not telefone:
             messages.error(request, "Informe o telefone do paciente")
             return redirect("passo_telefone",clinica_slug=clinica_slug)
+        paciente, created = Paciente.objects.get_or_create(
+            telefone=telefone,
+            defaults={"nome": nome} if nome else {}
+        )
 
-        paciente, created = Paciente.objects.get_or_create(telefone=telefone)
-
-        if nome:
+        if not created and nome and paciente.nome != nome:
             paciente.nome = nome
             paciente.save()
+        
         request.session["paciente_id"] = paciente.id
         return redirect("passo2_servico", clinica_slug=clinica_slug)
 

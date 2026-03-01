@@ -10,6 +10,7 @@ from django.views.decorators.http import require_POST
 from django.contrib import messages
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
+from agendamentos.utils import normalizar_telefone
 import json
 import re
 
@@ -21,9 +22,10 @@ def passo1_telefone(request, clinica_slug):
 
     if request.method == "POST":
         nome =request.POST.get("nome_paciente")
-        telefone = request.POST.get("telefone")
+        #telefone = request.POST.get("telefone")
         # normaliza telefone
-        telefone = re.sub(r"\D", "", telefone)
+        telefone = normalizar_telefone(request.POST.get("telefone"))
+        #telefone = re.sub(r"\D", "", telefone)
 
         if not telefone:
             messages.error(request, "Informe o telefone do paciente")

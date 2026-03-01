@@ -1,5 +1,6 @@
 from django.utils import timezone
 from .models import WhatsappLog
+import re
 
 def pode_enviar_whatsapp(clinica):
     plano = clinica.plano
@@ -33,3 +34,14 @@ def enviar_whatsapp(telefone, mensagem):
     print("📲 WhatsApp enviado para:", telefone)
     print("Mensagem:", mensagem)
     return True
+
+
+
+def normalizar_telefone(numero):
+    numero = re.sub(r"\D", "", numero)
+
+    # adiciona 55 se não tiver
+    if not numero.startswith("55"):
+        numero = "55" + numero
+
+    return numero

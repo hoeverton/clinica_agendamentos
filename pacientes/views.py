@@ -1,30 +1,53 @@
 from django.shortcuts import render, redirect
 from django.utils import timezone
+import re
 from .decorators import paciente_logado
+from agendamentos.utils import normalizar_telefone
 from agendamentos.models import Paciente
 
 def solicitar_codigo(request):
+
     print("##################################")
-    print('solicitar codigo')
+    print("solicitar codigo")
+    print("-----------------------")
+    print("METHOD:", request.method)
+
     if request.method == "POST":
-        telefone = request.POST.get("telefone")
+
+        # normaliza telefone
+        #telefone = re.sub(r"\D", "", request.POST.get("telefone", ""))
+        telefone = normalizar_telefone(
+    request.POST.get("telefone")
+)
+
+        print("Telefone recebido:", telefone)
 
         paciente = Paciente.objects.filter(telefone=telefone).first()
-        print("-----------------------")
-        if paciente:
-            paciente.gerar_codigo()
-            # simulação de envio
-            print("#####  Código enviado:", paciente.codigo_login)
 
+        print("Paciente encontrado:", paciente)
+        print("-----------------------")
+
+        if paciente:
+            # 🔐 limpa sessão antiga (login seguro)
+            request.session.flush()
+
+            # gera novo código OTP
+            paciente.gerar_codigo()
+
+            # simulação envio (depois vira WhatsApp)
+            print("##### Código enviado:", paciente.codigo_login)
+
+        # sempre vai para validar código
         return redirect("validar_codigo")
 
     return render(request, "pacientes/solicitar_codigo.html")
 
 def validar_codigo(request):
+    print("********** DEF Validar_ codigo*******")
     if request.method == "POST":
-        telefone = request.POST.get("telefone")
+        telefone = normalizar_telefone(request.POST.get("telefone"))
         codigo = request.POST.get("codigo")
-
+        print("TELEFONE11", telefone)
         paciente = Paciente.objects.filter(
             telefone=telefone,
             codigo_login=codigo,

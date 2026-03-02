@@ -1,67 +1,86 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <title>Minha Conta</title>
+{% extends "pacientes/base_paciente.html" %}
 
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-</head>
+{% block title %}Minha Conta{% endblock %}
 
-<body class="bg-light d-flex align-items-center" style="min-height: 100vh;">
+{% block content %}
 
-<div class="container">
-  <div class="row justify-content-center">
-    <div class="col-md-7 col-lg-6">
+<div class="container-fluid px-2 px-md-3">
 
-      <div class="card shadow-sm border border-2 border-light-subtle">
-        <div class="card-body p-5 text-center">
+    <!-- ================= HEADER ================= -->
+    <div class="d-flex flex-column flex-md-row 
+                justify-content-between 
+                align-items-md-center mb-4">
 
-          <!-- TÍTULO -->
-          <h1 class="h4 fw-bold mb-1">
-            Bem-vindo{{ paciente.nome|default:"" }}
-          </h1>
+        <h2 class="mb-3 mb-md-0">👤 Minha Área</h2>
 
-          <p class="text-muted mb-4">
-            Esta é a sua área do paciente
-          </p>
-
-          <!-- AÇÕES PRINCIPAIS -->
-          <div class="d-grid gap-3 mb-4">
-
-            <a href="3"
-               class="btn btn-primary btn-lg">
-              Agendar nova consulta
+        {% if clinica %}
+            <a href="{% url 'agendar_logado' clinica.slug %}"
+               class="btn btn-primary w-100 w-md-auto">
+                ➕ Novo Agendamento 
             </a>
+        {% endif %}
+    </div>
 
-            <a href="#"
-               class="btn btn-outline-primary btn-lg">
-              Minhas consultas
-            </a>
 
-          </div>
+    <!-- ================= CONSULTAS ================= -->
+    <div class="card shadow-sm border-0">
+        <div class="card-body">
 
-          <hr class="my-4">
+            <h5 class="card-title mb-3">
+                📅 Minhas Consultas
+            </h5>
 
-          <!-- AÇÕES SECUNDÁRIAS -->
-          <div class="d-flex justify-content-between align-items-center">
+            {% if agendamentos %}
+                <div class="table-responsive">
 
-            <span class="text-muted small">
-              Telefone: {{ paciente.telefone }}
-            </span>
+                    <table class="table table-hover align-middle mb-0">
 
-            <a href="#"
-               class="text-decoration-none text-danger small">
-              Sair
-            </a>
+                        <thead class="table-light">
+                            <tr>
+                                <th>Data</th>
+                                <th>Hora</th>
+                                <th class="d-none d-md-table-cell">Serviço</th>
+                                <th class="d-none d-lg-table-cell">Profissional</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
 
-          </div>
+                        <tbody>
+                            {% for a in agendamentos %}
+                                <tr>
+                                    <td>{{ a.data|date:"d/m/Y" }}</td>
+                                    <td>{{ a.horario|time:"H:i" }}</td>
+
+                                    <!-- some no celular -->
+                                    <td class="d-none d-md-table-cell">
+                                        {{ a.servico }}
+                                    </td>
+
+                                    <td class="d-none d-lg-table-cell">
+                                        {{ a.profissional }}
+                                    </td>
+
+                                    <td>
+                                        <span class="badge bg-success">
+                                            Confirmado
+                                        </span>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+
+                    </table>
+
+                </div>
+            {% else %}
+                <p class="text-muted mb-0">
+                    Você ainda não possui consultas agendadas.
+                </p>
+            {% endif %}
 
         </div>
-      </div>
-
     </div>
-  </div>
+
 </div>
 
-</body>
-</html>
+{% endblock %}

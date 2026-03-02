@@ -1,0 +1,27 @@
+<!-- MENU -->
+        <div class="collapse navbar-collapse mt-3 mt-lg-0"
+             id="navbarPaciente">
+
+            <div class="ms-auto d-flex flex-column flex-lg-row gap-2">
+
+                <!-- DASHBOARD -->
+                <a href="{% url 'dashboard_paciente' %}"
+                   class="btn btn-sm btn-light">
+                    Dashboard
+                </a>
+
+                <!-- NOVO AGENDAMENTO -->
+                {% if request.session.clinica_slug %}
+                    <a href="{% url 'agendar_logado' request.session.clinica_slug %}"
+                       class="btn btn-sm btn-success">
+                        Novo Agendamento
+                    </a>
+                {% endif %}
+
+                <!-- LOGOUT -->
+                <a href="{% url 'logout_paciente' %}"
+                   class="btn btn-sm btn-outline-light">
+                    Sair
+                </a>
+
+            </div>

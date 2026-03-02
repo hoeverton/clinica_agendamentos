@@ -19,6 +19,7 @@ import re
 # PASSO 1 - TELEFONE
 def passo1_telefone(request, clinica_slug):
     clinica = Clinica.objects.get(slug=clinica_slug)
+    request.session["clinica_slug"] = clinica_slug
 
     if request.method == "POST":
         nome =request.POST.get("nome_paciente")

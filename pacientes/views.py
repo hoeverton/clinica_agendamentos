@@ -3,7 +3,8 @@ from django.utils import timezone
 import re
 from .decorators import paciente_logado
 from agendamentos.utils import normalizar_telefone
-from agendamentos.models import Paciente
+from agendamentos.models import Paciente, Agendamento, Clinica
+from functools import wraps
 
 def solicitar_codigo(request):
 
@@ -15,21 +16,30 @@ def solicitar_codigo(request):
     if request.method == "POST":
 
         # normaliza telefone
-        #telefone = re.sub(r"\D", "", request.POST.get("telefone", ""))
         telefone = normalizar_telefone(
-    request.POST.get("telefone")
-)
+            request.POST.get("telefone")
+        )
 
         print("Telefone recebido:", telefone)
 
-        paciente = Paciente.objects.filter(telefone=telefone).first()
+        paciente = Paciente.objects.filter(
+            telefone=telefone
+        ).first()
 
         print("Paciente encontrado:", paciente)
         print("-----------------------")
 
         if paciente:
-            # 🔐 limpa sessão antiga (login seguro)
-            request.session.flush()
+
+            # ✅ salva clínica atual antes de limpar login
+            clinica_slug = request.session.get("clinica_slug")
+
+            # 🔐 remove apenas login antigo (NÃO usa flush)
+            request.session.pop("paciente_id", None)
+
+            # ✅ restaura clínica na sessão
+            if clinica_slug:
+                request.session["clinica_slug"] = clinica_slug
 
             # gera novo código OTP
             paciente.gerar_codigo()
@@ -76,6 +86,90 @@ def validar_codigo(request):
 
 @paciente_logado
 def dashboard_paciente(request):
-    paciente = Paciente.objects.get(id=request.session["paciente_id"])
-    return render(request, "pacientes/dashboard.html", {"paciente": paciente})
-# Create your views here.
+
+    print("+++++++ Def dashboard paciente ++++++++")
+
+    paciente = Paciente.objects.get(
+        id=request.session["paciente_id"]
+    )
+
+    clinica = None
+
+    # tenta pegar da sessão
+    clinica_slug = request.session.get("clinica_slug")
+
+    if clinica_slug:
+        clinica = Clinica.objects.filter(
+            slug=clinica_slug
+        ).first()
+
+    # ✅ fallback automático
+    if not clinica:
+        ultimo_agendamento = (
+            Agendamento.objects
+            .filter(paciente=paciente)
+            .select_related("clinica")
+            .order_by("-id")
+            .first()
+        )
+
+        if ultimo_agendamento:
+            clinica = ultimo_agendamento.clinica
+
+            # salva novamente na sessão
+            request.session["clinica_slug"] = clinica.slug
+
+    print("SESSION:", request.session)
+
+    agendamentos = (
+        Agendamento.objects
+        .filter(paciente=paciente)
+        .select_related("servico", "profissional")
+        .order_by("-data", "-horario")
+    )
+
+    return render(
+        request,
+        "pacientes/dashboard.html",
+        {
+            "paciente": paciente,
+            "clinica": clinica,
+            "agendamentos": agendamentos,
+        }
+    )
+@paciente_logado
+def agendar_logado(request, clinica_slug):
+    print("########################")
+    print("  DEF AGENDAR LOGADO")
+    # pega clínica da sessão
+    clinica_slug = request.session.get("clinica_slug")
+    print("Clinica = ", clinica_slug)
+
+    if not clinica_slug:
+        print(" NOT CLINICA")
+        return redirect("dashboard_paciente")
+
+    # vai direto para passo 2
+    return redirect(
+        "passo2_servico",
+        clinica_slug=clinica_slug
+    )
+
+def logout_paciente(request):
+    request.session.flush()  # apaga toda a sessão
+    return redirect("solicitar_codigo")
+
+
+"""def paciente_logado(view_func):
+
+    @wraps(view_func)
+    def wrapper(request, *args, **kwargs):
+
+        # verifica se paciente está logado
+        if not request.session.get("paciente_id"):
+            return redirect("solicitar_codigo")
+
+        # continua para a view
+        return view_func(request, *args, **kwargs)
+
+    return wrapper"""

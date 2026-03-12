@@ -40,6 +40,8 @@ INSTALLED_APPS = [
     'agendamentos',
     'clinica',
     'pacientes',
+    'whatsapp',
+    'rest_framework',
     
 ]
 

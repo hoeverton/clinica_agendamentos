@@ -1,20 +1,141 @@
-from django.shortcuts import render
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
+from agendamentos.models import ConversaWhatsapp, Servico, Agendamento, Paciente, Profissional, Clinica
+from agendamentos.utils import enviar_whatsapp
+from datetime import datetime
+from whatsapp.utils import buscar_horarios_disponiveis
 
 @api_view(["POST"])
 def whatsapp_webhook(request):
 
     numero = request.data.get("number")
-    mensagem = request.data.get("message")
+    mensagem = request.data.get("message", "").lower()
 
-    print(numero, mensagem)
+    print("Mensagem recebida:", numero, mensagem)
 
-    if mensagem.lower() == "oi":
-        return Response({
-            "reply": "Olá! 👋 Bem-vindo à clínica. Deseja agendar consulta?"
-        })
+    conversa, _ = ConversaWhatsapp.objects.get_or_create(telefone=numero)
 
-    return Response({
-        "reply": "Não entendi. Digite *oi* para iniciar."
-    })
+    # =========================
+    # INÍCIO
+    # =========================
+    if mensagem == "oi" or conversa.etapa == "inicio":
+        conversa.etapa = "menu"
+        conversa.save()
+
+        resposta = (
+            "Olá 👋\n\n"
+            "1️⃣ Agendar consulta\n"
+            "2️⃣ Cancelar agendamento"
+        )
+
+        enviar_whatsapp(numero, resposta)
+        return Response({"reply": resposta})
+
+    # =========================
+    # MENU
+    # =========================
+    if conversa.etapa == "menu":
+        if mensagem == "1":
+            servicos = Servico.objects.all()
+
+            texto = "Escolha o serviço:\n\n"
+            for i, s in enumerate(servicos, 1):
+                texto += f"{i} - {s.nome}\n"
+
+            conversa.etapa = "servico"
+            conversa.save()
+
+            enviar_whatsapp(numero, texto)
+            return Response({"reply": texto})
+
+        else:
+            return Response({"reply": "Digite 1 ou 2"})
+
+    # =========================
+    # SERVIÇO
+    # =========================
+    if conversa.etapa == "servico":
+        servicos = list(Servico.objects.all())
+
+        try:
+            escolha = int(mensagem) - 1
+            servico = servicos[escolha]
+
+            conversa.servico = servico
+            conversa.etapa = "data"
+            conversa.save()
+
+            resposta = "Digite a data (YYYY-MM-DD):"
+            enviar_whatsapp(numero, resposta)
+
+            return Response({"reply": resposta})
+
+        except:
+            return Response({"reply": "Opção inválida"})
+
+    # =========================
+    # DATA
+    # =========================
+    if conversa.etapa == "data":
+        try:
+            data_escolhida = datetime.strptime(mensagem, "%Y-%m-%d").date()
+
+            profissional = Profissional.objects.first()
+            clinica = Clinica.objects.first()
+            duracao = conversa.servico.duracao_minutos
+
+            horarios = buscar_horarios_disponiveis(
+                clinica,
+                profissional,
+                data_escolhida,
+                duracao
+            )
+
+            if not horarios:
+                return Response({"reply": "❌ Não há horários disponíveis nesse dia."})
+
+            conversa.data = data_escolhida
+            conversa.etapa = "horario"
+            conversa.save()
+
+            texto = "Horários disponíveis:\n\n"
+            for h in horarios:
+                texto += f"{h.strftime('%H:%M')}\n"
+
+            enviar_whatsapp(numero, texto)
+
+            return Response({"reply": texto})
+
+        except:
+            return Response({"reply": "Formato inválido. Use YYYY-MM-DD"})
+
+    # =========================
+    # HORÁRIO
+    # =========================
+    if conversa.etapa == "horario":
+        try:
+            horario = datetime.strptime(mensagem, "%H:%M").time()
+
+            paciente, _ = Paciente.objects.get_or_create(telefone=numero)
+
+            agendamento = Agendamento.objects.create(
+                paciente=paciente,
+                servico=conversa.servico,
+                profissional=Profissional.objects.first(),
+                clinica=Clinica.objects.first(),
+                data=conversa.data,
+                horario=horario
+            )
+
+            conversa.etapa = "inicio"
+            conversa.save()
+
+            resposta = "✅ Agendamento confirmado!"
+            enviar_whatsapp(numero, resposta)
+
+            return Response({"reply": resposta})
+
+        except:
+            return Response({"reply": "Horário inválido"})
+
+    return Response({"reply": "Digite 'oi' para começar"})

@@ -7,6 +7,7 @@ urlpatterns = [
     path("clinica/", include("clinica.urls")),   
     path("agendamentos/", include("agendamentos.urls")),
     path("accounts/", include("django.contrib.auth.urls")),
-    path("paciente/", include("pacientes.urls")),
+    path("paciente/", include("pacientes.urls")),    
+    path('api/', include('whatsapp.urls')),
 
 ]

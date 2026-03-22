@@ -14,6 +14,11 @@ class Clinica(models.Model):
     endereco = models.CharField(max_length=200, blank=True, null=True)
     telefone = models.CharField(max_length=20, blank=True, null=True)
     whatsapp_extra = models.IntegerField(default=0)
+    whatsapp_instance = models.CharField(
+        max_length=100,
+        null=True,
+        blank=True
+    )
 
 
     #Permissões
@@ -194,3 +199,17 @@ class UsuarioClinica(models.Model):
 
     def __str__(self):
         return f"{self.user.username} - {self.clinica.nome}"
+    
+
+class ConversaWhatsapp(models.Model):
+    telefone = models.CharField(max_length=20, unique=True)
+    etapa = models.CharField(max_length=50, default="inicio")
+
+    servico = models.ForeignKey(Servico, null=True, blank=True, on_delete=models.SET_NULL)
+    profissional = models.ForeignKey(Profissional, null=True, blank=True, on_delete=models.SET_NULL)
+    data = models.DateField(null=True, blank=True)
+
+    atualizado_em = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.telefone} - {self.etapa}"

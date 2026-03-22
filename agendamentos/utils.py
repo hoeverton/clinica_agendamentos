@@ -1,6 +1,7 @@
 from django.utils import timezone
 from .models import WhatsappLog
 import re
+import requests
 
 def pode_enviar_whatsapp(clinica):
     plano = clinica.plano
@@ -26,14 +27,30 @@ def registrar_envio_whatsapp(clinica, telefone, tipo):
         tipo=tipo
     )
 
-def enviar_whatsapp(telefone, mensagem):
-    """
-    Simulação de envio de WhatsApp.
-    Aqui futuramente entra API real (Twilio, Z-API, Meta, etc)
-    """
-    print("📲 WhatsApp enviado para:", telefone)
-    print("Mensagem:", mensagem)
-    return True
+def enviar_whatsapp(numero, mensagem):
+    url = "https://api.w-api.app/v1/message/send-text?instanceId=LITE-WT27X1-TCQBZE"
+
+    headers = {
+        "Authorization": "Bearer bhLTUq7lDpb98Gm26skyFLUqTYPg7Wnrq",
+        "Content-Type": "application/json"
+    }
+
+    payload = {
+        "phone": numero,
+        "message": mensagem
+    }
+
+    try:
+        response = requests.post(url, json=payload, headers=headers)
+
+        print("STATUS:", response.status_code)
+        print("RESPOSTA:", response.text)
+
+        return response.status_code == 200
+
+    except Exception as e:
+        print("Erro:", e)
+        return False
 
 
 

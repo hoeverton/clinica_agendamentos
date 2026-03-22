@@ -42,7 +42,7 @@ INSTALLED_APPS = [
     'pacientes',
     'whatsapp',
     'rest_framework',
-    
+    'core',
 ]
 
 MIDDLEWARE = [

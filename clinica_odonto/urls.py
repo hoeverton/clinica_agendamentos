@@ -9,5 +9,6 @@ urlpatterns = [
     path("accounts/", include("django.contrib.auth.urls")),
     path("paciente/", include("pacientes.urls")),    
     path('api/', include('whatsapp.urls')),
+    path("whatsapp/", include("whatsapp.urls")),
 
 ]

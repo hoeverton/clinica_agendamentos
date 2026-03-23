@@ -2,8 +2,11 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from agendamentos.models import ConversaWhatsapp, Servico, Agendamento, Paciente, Profissional, Clinica
 from agendamentos.utils import enviar_whatsapp
+from django.contrib.auth.decorators import login_required
 from datetime import datetime
+from django.http import JsonResponse
 from whatsapp.utils import buscar_horarios_disponiveis
+import requests 
 
 @api_view(["POST"])
 def whatsapp_webhook(request):
@@ -139,3 +142,63 @@ def whatsapp_webhook(request):
             return Response({"reply": "Horário inválido"})
 
     return Response({"reply": "Digite 'oi' para começar"})
+
+@login_required
+def qr_code_whatsapp(request):
+    clinica = request.user.usuarioclinica.clinica
+
+    url = f"https://api.w-api.app/v1/instance/qr-code?instanceId={clinica.whatsapp_instance}"
+    #url = f"https://api.w-api.app/v1/instance/get-qr-code?instanceId={clinica.whatsapp_instance}"
+    
+    headers = {
+        "Authorization": f"Bearer {clinica.whatsapp_token}"
+    }
+
+    response = requests.get(url, headers=headers)
+
+    print("STATUS:", response.status_code)
+    print("TEXTO:", response.text)
+
+    try:
+        data = response.json()
+    except:
+        return JsonResponse({
+            "erro": "Resposta inválida",
+            "texto": response.text
+        })
+
+    return JsonResponse(data)
+
+
+"""@login_required
+def conectar_whatsapp(request):
+    clinica = request.user.usuarioclinica.clinica
+
+    #url = "https://api.w-api.app/v1/instance/create"
+    url = "https://api.w-api.app/v1/instance/init"
+
+    headers = {
+        "Authorization": f"Bearer {clinica.whatsapp_token}",
+        "Content-Type": "application/json"
+    }
+
+    payload = {
+        "instanceName": f"clinica_{clinica.id}"
+    }
+
+    response = requests.post(url, json=payload, headers=headers)
+
+    print("STATUS:", response.status_code)
+    print("TEXTO:", response.text)
+
+    # 🔥 EVITA QUEBRAR
+    try:
+        data = response.json()
+    except:
+        return JsonResponse({
+            "erro": "Resposta inválida da API",
+            "status_code": response.status_code,
+            "texto": response.text
+        })
+
+    return JsonResponse(data)"""

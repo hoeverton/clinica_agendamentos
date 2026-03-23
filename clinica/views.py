@@ -956,3 +956,6 @@ def prontuario_busca(request):
         }
     )
 
+@login_required
+def pagina_conectar_whatsapp(request):
+    return render(request, "clinica/conectar_whatsapp.html")

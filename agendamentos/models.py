@@ -14,11 +14,9 @@ class Clinica(models.Model):
     endereco = models.CharField(max_length=200, blank=True, null=True)
     telefone = models.CharField(max_length=20, blank=True, null=True)
     whatsapp_extra = models.IntegerField(default=0)
-    whatsapp_instance = models.CharField(
-        max_length=100,
-        null=True,
-        blank=True
-    )
+    whatsapp_instance = models.CharField(max_length=100,null=True,blank=True)
+    whatsapp_token = models.CharField(max_length=200, null=True, blank=True)
+    whatsapp_status = models.CharField(max_length=20, default="desconectado")
 
 
     #Permissões

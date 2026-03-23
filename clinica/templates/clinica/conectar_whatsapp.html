@@ -1,0 +1,32 @@
+<h2>📲 Conectar WhatsApp</h2>
+
+<button onclick="carregarQR()">Gerar QR Code</button>
+
+<div id="qr" style="margin-top:20px;"></div>
+
+<script>
+function carregarQR() {
+    fetch("/whatsapp/qr/")
+        .then(r => r.json())
+        .then(data => {
+            console.log("QR:", data)
+
+            const qr = data.qrcode; // 🔥 CORRETO
+
+            if (qr) {
+                document.getElementById("qr").innerHTML =
+                    `<img src="${qr}" width="250">`
+            } else if (data.connected) {
+                document.getElementById("qr").innerHTML =
+                    "✅ WhatsApp já conectado"
+            } else {
+                document.getElementById("qr").innerHTML =
+                    "❌ QR não disponível"
+            }
+        })
+        .catch(e => {
+            console.error("Erro:", e)
+            document.getElementById("qr").innerHTML = "Erro ao carregar QR"
+        })
+}
+</script>

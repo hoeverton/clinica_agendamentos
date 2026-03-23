@@ -43,6 +43,7 @@ class Command(BaseCommand):
 
             # 📲 Enviar WhatsApp
             enviado = enviar_whatsapp(
+                ag.clinica,
                 ag.paciente.telefone,
                 mensagem
             )

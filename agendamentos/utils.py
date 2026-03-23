@@ -27,7 +27,7 @@ def registrar_envio_whatsapp(clinica, telefone, tipo):
         tipo=tipo
     )
 
-def enviar_whatsapp(numero, mensagem):
+"""def enviar_whatsapp(numero, mensagem):
     url = "https://api.w-api.app/v1/message/send-text?instanceId=LITE-WT27X1-TCQBZE"
 
     headers = {
@@ -51,8 +51,38 @@ def enviar_whatsapp(numero, mensagem):
     except Exception as e:
         print("Erro:", e)
         return False
+"""
 
 
+def enviar_whatsapp(clinica, numero, mensagem):
+
+    url = "https://api.w-api.app/v1/message/send-text"
+
+    params = {
+        "instanceId": clinica.whatsapp_instance
+    }
+
+    headers = {
+        "Authorization": f"Bearer {clinica.whatsapp_token}",
+        "Content-Type": "application/json"
+    }
+
+    payload = {
+        "phone": numero,
+        "message": mensagem
+    }
+
+    response = requests.post(
+        url,
+        params=params,
+        json=payload,
+        headers=headers
+    )
+
+    print("STATUS:", response.status_code)
+    print("RESPOSTA:", response.text)
+
+    return response.status_code == 200
 
 def normalizar_telefone(numero):
     numero = re.sub(r"\D", "", numero)

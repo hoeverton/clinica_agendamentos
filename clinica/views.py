@@ -392,9 +392,13 @@ def agendamento_delete(request, pk):
             )
 
             enviado = enviar_whatsapp(
-                paciente.telefone,
+                agendamento.clinica,
+                agendamento.paciente.telefone,
                 mensagem
             )
+            print("ENVIANDO CANCELAMENTO...")
+            print("CLINICA:", clinica)
+            print("TOKEN:", clinica.whatsapp_token) 
 
             if enviado:
                 registrar_envio_whatsapp(
@@ -417,6 +421,8 @@ def agendamento_delete(request, pk):
 @login_required
 @permission_required("agendamentos.gerenciar_agendamentos", raise_exception=True)
 def agendamento_edit(request, pk):
+    print("******************************")
+    print("         Def agenamento edit                  ")
     clinica = request.user.usuarioclinica.clinica
     
 
@@ -459,10 +465,28 @@ def agendamento_edit(request, pk):
                 "❌ Este horário já está ocupado."
             )
             return redirect("agendamento_edit", pk=pk)
+        
+        # verifica se mudou algo
+        if agendamento.data == data and agendamento.horario == horario:
+            messages.info(request, "Nenhuma alteração foi feita.")
+            return redirect("clinica_dashboard")
 
         agendamento.data = data
         agendamento.horario = horario
         agendamento.save()
+        mensagem = (
+            f"🔄 Seu agendamento foi ALTERADO\n\n"
+            f"📅 Nova data: {agendamento.data.strftime('%d/%m/%Y')}\n"
+            f"⏰ Novo horário: {agendamento.horario.strftime('%H:%M')}\n"
+            f"👨‍⚕️ Profissional: {agendamento.profissional}\n\n"
+            f"Se precisar de algo, estamos à disposição!"
+        )
+
+        enviar_whatsapp(
+            agendamento.clinica,
+            agendamento.paciente.telefone,
+            mensagem
+        )
 
         messages.success(
             request,

@@ -272,6 +272,7 @@ def confirmar(request, clinica_slug):
             )
 
             enviado = enviar_whatsapp(
+                clinica,
                 paciente.telefone,
                 mensagem
             )

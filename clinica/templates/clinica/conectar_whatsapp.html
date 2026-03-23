@@ -1,3 +1,9 @@
+{% extends "clinica/base.html" %}
+
+{% block title %}Editar Agendamento{% endblock %}
+
+{% block content %}
+
 <h2>📲 Conectar WhatsApp</h2>
 
 <button onclick="carregarQR()">Gerar QR Code</button>
@@ -30,3 +36,8 @@ function carregarQR() {
         })
 }
 </script>
+<a href="{% url 'clinica_dashboard' %}" class="btn btn-secondary mt-3">
+    ⬅ Voltar ao dashboard
+</a>
+
+{% endblock %}

@@ -25,7 +25,12 @@ SECRET_KEY = 'django-insecure-25ji416%4l406)z4i6#4!scx3s4#adu2gfuz*v+9_d-6h85j$f
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    'agendafacilodonto.com.br',
+    'www.agendafacilodonto.com.br',
+    '127.0.0.1',
+    'localhost'
+]
 
 
 # Application definition

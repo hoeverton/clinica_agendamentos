@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Agenda Fácil Odonto</title>
+</head>
+<body>
+
+    <h1>Bem-vindo ao sistema 🚀</h1>
+
+    <h2>Clínicas cadastradas:</h2>
+
+    <ul>
+        {% for clinica in clinicas %}
+            <li>{{ clinica }}</li>
+        {% empty %}
+            <li>Nenhuma clínica cadastrada</li>
+        {% endfor %}
+    </ul>
+
+</body>
+</html>

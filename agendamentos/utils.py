@@ -16,7 +16,7 @@ def pode_enviar_whatsapp(clinica):
         data__year=timezone.now().year
     ).count()
 
-    limite_total = plano.max_whatsapp_mes + clinica.whatsapp_extra
+    limite_total = plano.max_whatsapp_mes #+ clinica.whatsapp_extra
     return usados < limite_total
 
 

@@ -28,7 +28,7 @@ def whatsapp_status(request):
     percentual = 0
 
     if clinica.plano.max_whatsapp_mes is not None:
-        limite = clinica.plano.max_whatsapp_mes + clinica.whatsapp_extra
+        limite = clinica.plano.max_whatsapp_mes + clinica.limite_mensagens
         if limite > 0:
             percentual = int((usados / limite) * 100)
 

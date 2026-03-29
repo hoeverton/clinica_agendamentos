@@ -60,7 +60,8 @@ class ClinicaDashboardView(LoginRequiredMixin, TemplateView):
         context = super().get_context_data(**kwargs)
 
         # 🔑 Clínica vinculada ao usuário
-        clinica = self.request.user.usuarioclinica.clinica
+        #clinica = self.request.user.usuarioclinica.clinica
+        clinica = self.request.user.clinica
 
         # 📅 Datas base
         agora = timezone.now()
@@ -675,7 +676,7 @@ def minha_conta(request):
     whatsapp_percentual = 0
 
     if clinica and clinica.plano and clinica.plano.max_whatsapp_mes is not None:
-        whatsapp_limite = clinica.plano.max_whatsapp_mes + clinica.whatsapp_extra
+        whatsapp_limite = clinica.plano.max_whatsapp_mes #+ clinica.whatsapp_extra
         if whatsapp_limite > 0:
             whatsapp_percentual = int((whatsapp_usados / whatsapp_limite) * 100)
 

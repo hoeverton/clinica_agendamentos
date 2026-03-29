@@ -7,7 +7,7 @@
 
     <title>{% block title %}{{ clinica.nome }} | Agendamento{% endblock %}</title>
 
-    <!-- Bootstrap CSS -->
+    <!-- Bootstrap -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 
     <style>
@@ -23,6 +23,12 @@
         .btn-primary {
             border-radius: 8px;
         }
+
+        /* 🔥 CONTROLE REAL DE LARGURA */
+        .container-agendamento {
+            max-width: 500px;
+            margin: 0 auto;
+        }
     </style>
 
     {% block extra_css %}{% endblock %}
@@ -31,27 +37,26 @@
 <body>
 
 <div class="container py-5">
-    <div class="row justify-content-center">
-        <div class="col-12 col-sm-10 col-md-6 col-lg-4">
+    <div class="container-agendamento">
 
-            <div class="text-center mb-4">
-                <h4 class="fw-bold">Agenda Fácil</h4>
-            </div>
-
-            {% block content %}{% endblock %}
-
-            <div class="text-center mt-4 text-muted" style="font-size: 14px;">
-                © {{ now|date:"Y" }} Agenda Fácil
-            </div>
-
+        <!-- HEADER -->
+        <div class="text-center mb-4">
+            <h4 class="fw-bold">Agenda Fácil</h4>
         </div>
+
+        {% block content %}{% endblock %}
+
+        <!-- FOOTER -->
+        <div class="text-center mt-4 text-muted" style="font-size: 14px;">
+            © {{ now|date:"Y" }} Agenda Fácil
+        </div>
+
     </div>
 </div>
 
-<!-- Bootstrap JS (GLOBAL) -->
+<!-- Bootstrap JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
-<!-- JS ESPECÍFICO DAS PÁGINAS -->
 {% block extra_js %}{% endblock %}
 
 </body>

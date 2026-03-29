@@ -3,34 +3,49 @@
 {% block title %}Escolher Serviço{% endblock %}
 
 {% block content %}
-<div class="container mt-5 col-md-6">
 
-    <h3 class="text-center mb-4">Escolha o serviço</h3>
+<style>
+    .card-agendamento {
+        max-width: 500px;
+        margin: 0 auto;
+        border-radius: 16px;
+    }
+</style>
 
-    <form method="POST" class="card p-4 shadow">
-        {% csrf_token %}
+<div class="container py-5">
+    <div class="row justify-content-center">
 
-        <label class="form-label">Serviço:</label>
+        <div class="col-12">
 
-        <select name="servico_id" class="form-select" required>
-            {% for servico in servicos %}
-                <option value="{{ servico.id }}">
-                    {{ servico.nome }} — {{ servico.duracao_minutos }}min
-                </option>
-            {% endfor %}
-        </select>
+            <h3 class="text-center mb-4">Escolha o serviço</h3>
 
-        <button class="btn btn-primary w-100 mt-3">
-            Próximo
-        </button>
-    </form>
+            <form method="POST" class="card card-agendamento p-4 shadow border-0">
+                {% csrf_token %}
 
-    <!-- voltar -->
-    <a href="{% url 'passo1_telefone' clinica.slug %}" class="btn btn-link mt-3">
-            ← Voltar ao início
-    </a>
-    
+                <label class="form-label">Serviço:</label>
 
+                <select name="servico_id" class="form-select" required>
+                    {% for servico in servicos %}
+                        <option value="{{ servico.id }}">
+                            {{ servico.nome }} — {{ servico.duracao_minutos }}min
+                        </option>
+                    {% endfor %}
+                </select>
+
+                <button class="btn btn-primary w-100 mt-3">
+                    Próximo
+                </button>
+            </form>
+
+            <div class="text-center">
+                <a href="{% url 'passo1_telefone' clinica.slug %}" class="btn btn-link mt-3">
+                    ← Voltar ao início
+                </a>
+            </div>
+
+        </div>
+
+    </div>
 </div>
 
 {% endblock %}

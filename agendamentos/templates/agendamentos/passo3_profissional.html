@@ -4,28 +4,48 @@
 
 {% block content %}
 
-<div class="container mt-5 col-md-6">
-    
+<style>
+    .card-agendamento {
+        max-width: 500px;
+        margin: 0 auto;
+        border-radius: 16px;
+    }
+</style>
 
-    <form method="POST" class="card p-4 shadow">
-        {% csrf_token %}
+<div class="container py-5">
+    <div class="row justify-content-center">
 
-        <label class="form-label">Profissional:</label>
-        <select name="profissional_id" class="form-select" required>
-            {% for profissional in profissionais %}
-                <option value="{{ profissional.id }}">
-                    {{ profissional.nome }} ({{ profissional.especialidade }})
-                </option>
-            {% endfor %}
-        </select>
+        <div class="col-12">
 
-        <button class="btn btn-primary w-100 mt-3">Próximo</button>
-    </form>
+            <h3 class="text-center mb-4">Escolha o profissional</h3>
 
-    <!-- Voltar ao início do fluxo -->
-    <a href="{% url 'passo1_telefone' clinica.slug %}" class="btn btn-link mt-3">
-        Voltar ao início
-    </a>
+            <form method="POST" class="card card-agendamento p-4 shadow border-0">
+                {% csrf_token %}
+
+                <label class="form-label">Profissional:</label>
+
+                <select name="profissional_id" class="form-select" required>
+                    {% for profissional in profissionais %}
+                        <option value="{{ profissional.id }}">
+                            {{ profissional.nome }} ({{ profissional.especialidade }})
+                        </option>
+                    {% endfor %}
+                </select>
+
+                <button class="btn btn-primary w-100 mt-3">
+                    Próximo
+                </button>
+            </form>
+
+            <div class="text-center">
+                <a href="{% url 'passo1_telefone' clinica.slug %}" class="btn btn-link mt-3">
+                    ← Voltar ao início
+                </a>
+            </div>
+
+        </div>
+
+    </div>
 </div>
 
 {% endblock %}

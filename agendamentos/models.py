@@ -3,23 +3,30 @@ from django.contrib.auth.models import User
 from django.utils.text import slugify
 from clinica.models import Plano
 from django.utils import timezone
+import uuid
 import random
 
 
 
+
 class Clinica(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE, null=True, blank=True)
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+
     nome = models.CharField(max_length=100)
     slug = models.SlugField(unique=True, blank=True)
+
     endereco = models.CharField(max_length=200, blank=True, null=True)
     telefone = models.CharField(max_length=20, blank=True, null=True)
-    whatsapp_extra = models.IntegerField(default=0)
+
+    limite_mensagens = models.IntegerField(default=0)
     whatsapp_instance = models.CharField(max_length=100,null=True,blank=True)
     whatsapp_token = models.CharField(max_length=200, null=True, blank=True)
     whatsapp_status = models.CharField(max_length=20, default="desconectado")
 
+    plano = models.ForeignKey(Plano, on_delete=models.PROTECT, null=True, blank=True)
 
-    #Permissões
+    created_at = models.DateTimeField(auto_now_add=True)
+
     class Meta:
         permissions = [
             ("ver_dashboard", "Pode ver o dashboard"),
@@ -28,17 +35,11 @@ class Clinica(models.Model):
             ("gerenciar_profissionais", "Pode gerenciar profissionais"),
             ("ver_relatorios", "Pode ver relatórios"),
         ]
-    # 🔑 NOVO CAMPO
-    plano = models.ForeignKey(
-        Plano,
-        on_delete=models.PROTECT,
-        null=True,
-        blank=True
-    )
 
     def save(self, *args, **kwargs):
         if not self.slug:
-            self.slug = slugify(self.nome)
+            base_slug = slugify(self.nome)            
+            self.slug = f"{base_slug}-{str(uuid.uuid4())[:5]}"
         super().save(*args, **kwargs)
 
     def __str__(self):

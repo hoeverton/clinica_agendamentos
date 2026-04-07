@@ -4,6 +4,8 @@ from django.contrib.auth import login
 from django.contrib.auth.models import Group
 from agendamentos.models import Clinica, Plano, UsuarioClinica
 from django.utils.text import slugify
+from django.core.mail import send_mail
+from django.core.mail import EmailMultiAlternatives
 import uuid
 
 def home(request):
@@ -57,8 +59,38 @@ def cadastro(request):
         user.groups.add(grupo_admin)
 
         login(request, user)
+        subject = 'Bem-vindo ao Agenda Fácil Odonto 🦷'
 
-        #return redirect(f"/{clinica.slug}/dashboard/")
+        html_content = f"""
+        <h2>Bem-vindo, {nome} 👋</h2>
+
+        <p>Sua clínica foi criada com sucesso!</p>
+
+        <p>
+        <a href="https://agendafacilodonto.com.br/clinica/dashboard/"
+        style="background:#28a745;color:#fff;padding:12px 20px;text-decoration:none;border-radius:5px;">
+        Acessar Dashboard
+        </a>
+        </p>
+
+        <p>Qualquer dúvida estamos à disposição 🚀</p>
+        """
+
+        try:
+            msg = EmailMultiAlternatives(
+                subject=subject,
+                body='Bem-vindo ao sistema!',
+                from_email=None,
+                to=[email],
+            )
+
+            msg.attach_alternative(html_content, "text/html")
+            msg.send()
+
+        except Exception as e:
+            print("Erro ao enviar email:", e)
+
+        
         return redirect("clinica_dashboard")
 
     return render(request, "cadastro.html")

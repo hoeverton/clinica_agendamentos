@@ -67,7 +67,7 @@ def cadastro(request):
         <p>Sua clínica foi criada com sucesso!</p>
 
         <p>
-        <a href="https://agendafacilodonto.com.br/clinica/dashboard/"
+        <a href="https://agendafacilodonto.com.br/clinica/login"
         style="background:#28a745;color:#fff;padding:12px 20px;text-decoration:none;border-radius:5px;">
         Acessar Dashboard
         </a>

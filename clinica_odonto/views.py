@@ -1,7 +1,8 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth.models import User
 from django.contrib.auth import login
-from agendamentos.models import Clinica, Plano
+from django.contrib.auth.models import Group
+from agendamentos.models import Clinica, Plano, UsuarioClinica
 from django.utils.text import slugify
 import uuid
 
@@ -18,51 +19,46 @@ def cadastro(request):
         email = request.POST.get("email").strip()
         senha = request.POST.get("senha")
 
-        # 🔴 valida se email já existe
         if User.objects.filter(username=email).exists():
             return render(request, "cadastro.html", {
-                "erro": "Email já cadastrado",
-                "nome": nome,
-                "email": email
+                "erro": "Email já cadastrado"
             })
 
-        try:
-            # ✅ cria usuário (UMA VEZ SÓ)
-            user = User.objects.create_user(
-                username=email,
-                email=email,
-                password=senha
-            )
-        except IntegrityError:
-            return render(request, "cadastro.html", {
-                "erro": "Erro ao criar usuário",
-                "nome": nome,
-                "email": email
-            })
+        user = User.objects.create_user(
+            username=email,
+            email=email,
+            password=senha
+        )
 
-        # 🔥 gerar slug único
+        # slug
         base_slug = slugify(nome)
         slug = base_slug
-
         while Clinica.objects.filter(slug=slug).exists():
-            slug = f"{base_slug}-{str(uuid.uuid4())[:4]}"
+            slug = f"{base_slug}-{uuid.uuid4().hex[:4]}"
 
-        # 🔥 pegar plano padrão (crie um plano "Trial" depois)
         plano = Plano.objects.first()
 
-        # ✅ criar clínica
         clinica = Clinica.objects.create(
             user=user,
             nome=nome,
             slug=slug,
             plano=plano
         )
-        
 
-        # ✅ login automático
+        # 🔥 RELAÇÃO (igual admin)
+        UsuarioClinica.objects.create(
+            user=user,
+            clinica=clinica
+        )
+
+        # 🔥 GRUPO ADMIN
+        from django.contrib.auth.models import Group
+        grupo_admin = Group.objects.get(name="Administrador")
+        user.groups.add(grupo_admin)
+
         login(request, user)
 
-        # 🚀 redireciona
-        return redirect(f"/{clinica.slug}/dashboard/")
+        #return redirect(f"/{clinica.slug}/dashboard/")
+        return redirect("clinica_dashboard")
 
     return render(request, "cadastro.html")

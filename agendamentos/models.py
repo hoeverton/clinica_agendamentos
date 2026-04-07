@@ -10,7 +10,7 @@ import random
 
 
 class Clinica(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    user = models.OneToOneField(User, on_delete=models.CASCADE, )
 
     nome = models.CharField(max_length=100)
     slug = models.SlugField(unique=True, blank=True)

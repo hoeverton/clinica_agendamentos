@@ -19,7 +19,7 @@ ALLOWED_HOSTS = [
     'agendafacilodonto.com.br',
     'www.agendafacilodonto.com.br',
     '127.0.0.1',
-    'localhost'
+    '5.189.184.41',
 ]
 
 

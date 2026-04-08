@@ -22,8 +22,8 @@ class Clinica(models.Model):
     whatsapp_instance = models.CharField(max_length=100,null=True,blank=True)
     whatsapp_token = models.CharField(max_length=200, null=True, blank=True)
     whatsapp_status = models.CharField(max_length=20, default="desconectado")
-
-    plano = models.ForeignKey(Plano, on_delete=models.PROTECT, null=True, blank=True)
+   
+    plano = models.ForeignKey(Plano, on_delete=models.PROTECT)
 
     created_at = models.DateTimeField(auto_now_add=True)
 

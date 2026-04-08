@@ -26,6 +26,7 @@ from django.views.decorators.http import require_POST
 from agendamentos.models import Paciente,Prontuario
 from django.db.models import Q
 from .forms import ProfissionalForm, ServicoForm
+from clinica.services.plano_service import PlanoService
 from agendamentos.utils import (
     pode_enviar_whatsapp,
     enviar_whatsapp,
@@ -129,7 +130,8 @@ def clinica_logout(request):
     return redirect("clinica_login")
 
 @login_required
-@permission_required("agendamentos.gerenciar_agendamentos", raise_exception=True)
+#@permission_required("agendamentos.gerenciar_agendamentos", raise_exception=True)
+@permission_required("agendamentos.gerenciar_profissionais", raise_exception=True)
 def disponibilidade_create(request):
     clinica = request.user.usuarioclinica.clinica
     profissionais = Profissional.objects.filter(clinica=clinica)
@@ -505,7 +507,9 @@ def agendamento_edit(request, pk):
 @permission_required("agendamentos.ver_relatorios", raise_exception=True)
 def relatorio_agendamentos_csv(request):
     clinica = request.user.usuarioclinica.clinica
-
+     # 🔥 VALIDA PLANO AQUI
+    if not clinica.plano.tem_relatorios:
+        return HttpResponse("Seu plano não permite relatórios")
     data_inicio = request.GET.get("data_inicio")
     data_fim = request.GET.get("data_fim")
 
@@ -554,7 +558,9 @@ def relatorio_agendamentos_csv(request):
 @permission_required("agendamentos.ver_relatorios", raise_exception=True)
 def relatorio_agendamentos_pdf(request):
     clinica = request.user.usuarioclinica.clinica
-
+    # 🔥 VALIDA PLANO AQUI
+    if not clinica.plano.tem_relatorios:
+        return HttpResponse("Seu plano não permite relatórios")
     data_inicio = request.GET.get("data_inicio")
     data_fim = request.GET.get("data_fim")
 
@@ -633,7 +639,9 @@ def relatorio_agendamentos_pdf(request):
 @permission_required("agendamentos.ver_relatorios", raise_exception=True)
 def relatorio_agendamentos_html(request):
     clinica = request.user.usuarioclinica.clinica
-
+    # 🔥 VALIDA PLANO AQUI
+    if not clinica.plano.tem_relatorios:
+        return HttpResponse("Seu plano não permite relatórios")
     data_inicio = request.GET.get("data_inicio")
     data_fim = request.GET.get("data_fim")
 
@@ -716,9 +724,15 @@ def planos(request):
         }
     )
 @login_required
+#@permission_required("clinica.gerenciar_profissionais", raise_exception=True)
 @permission_required("agendamentos.gerenciar_profissionais", raise_exception=True)
 def profissional_create(request):
     clinica = request.user.usuarioclinica.clinica
+
+    # 🔥 VALIDAÇÃO DO PLANO
+    if not PlanoService.pode_criar_profissional(clinica):
+        return HttpResponse("Seu plano não permite adicionar mais profissionais")
+
     form = ProfissionalForm(request.POST or None)
 
     if form.is_valid():
@@ -741,6 +755,9 @@ def servico_create(request):
     clinica = request.user.usuarioclinica.clinica
     form = ServicoForm(request.POST or None)
 
+    if not PlanoService.pode_criar_servico(clinica):
+        return HttpResponse("Seu plano não permite adiciona mais serviços")
+    
     if form.is_valid():
         servico = form.save(commit=False)
         servico.clinica = clinica

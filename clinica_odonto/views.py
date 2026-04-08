@@ -38,7 +38,8 @@ def cadastro(request):
         while Clinica.objects.filter(slug=slug).exists():
             slug = f"{base_slug}-{uuid.uuid4().hex[:4]}"
 
-        plano = Plano.objects.first()
+        plano = Plano.objects.get(nome="Básico")
+        
 
         clinica = Clinica.objects.create(
             user=user,
@@ -55,7 +56,7 @@ def cadastro(request):
 
         # 🔥 GRUPO ADMIN
         from django.contrib.auth.models import Group
-        grupo_admin = Group.objects.get(name="Administrador")
+        grupo_admin = Group.objects.get(name="Admin")
         user.groups.add(grupo_admin)
 
         login(request, user)

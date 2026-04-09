@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'whatsapp',
     'rest_framework',
     'core',
+    'usuarios',
 ]
 
 MIDDLEWARE = [

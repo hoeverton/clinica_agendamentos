@@ -1,0 +1,68 @@
+{% extends 'clinica/base.html' %}
+
+{% block content %}
+
+<div class="container mt-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3>👥 Usuários da Clínica</h3>
+        <a href="{% url 'usuario_create' %}" class="btn btn-primary">
+            + Novo Usuário
+        </a>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+
+            <table class="table table-hover align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>Usuário</th>
+                        <th>Grupo</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for uc in usuarios %}
+                    <tr>
+                        <td>{{ uc.user.username }}</td>
+
+                        <td>
+                            {% for grupo in uc.user.groups.all %}
+                                <span class="badge bg-info text-dark">
+                                    {{ grupo.name }}
+                                </span>
+                            {% empty %}
+                                <span class="text-muted">Sem grupo</span>
+                            {% endfor %}
+                        </td>
+
+                        <td>
+                            <a href="{% url 'usuario_update' uc.user.id %}" class="btn btn-sm btn-warning">
+                                ✏️ Editar
+                            </a>
+
+                            <a href="{% url 'usuario_delete' uc.user.id %}" 
+                               class="btn btn-sm btn-danger"
+                               onclick="return confirm('Tem certeza que deseja excluir este usuário?')">
+                                🗑️ Excluir
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="3" class="text-center text-muted">
+                            Nenhum usuário cadastrado
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+        </div>
+    </div>
+
+</div>
+
+{% endblock %}

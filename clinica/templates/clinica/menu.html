@@ -59,13 +59,13 @@
     {% endif %}
 
     <hr class="my-3">
-    
+    {% if perms.agendamentos.gerenciar_usuarios %}
     <li class="nav-item">
         <a href="{% url 'usuarios_list' %}" class="nav-link">
             👥 Usuários
         </a>
     </li>
-    
+    {% endif %}
 
     <li class="nav-item">
         <a href="{% url 'minha_conta' %}" class="nav-link">

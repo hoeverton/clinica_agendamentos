@@ -14,7 +14,7 @@ from django.utils import timezone
 from django.contrib.auth.mixins import LoginRequiredMixin,PermissionRequiredMixin
 from django.shortcuts import render, redirect
 from django.views import View
-from agendamentos.models import Clinica, Agendamento, Disponibilidade, Profissional, Plano
+from agendamentos.models import Clinica, Agendamento, Disponibilidade, Profissional, Plano,UsuarioClinica
 from agendamentos.models import WhatsappLog, Agendamento
 from django.contrib import messages
 from django.db.models import Count
@@ -60,9 +60,13 @@ class ClinicaDashboardView(LoginRequiredMixin, TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
-        # 🔑 Clínica vinculada ao usuário
-        #clinica = self.request.user.usuarioclinica.clinica
-        clinica = self.request.user.clinica
+        # 🔒 pega clínica com segurança
+        usuario_clinica = UsuarioClinica.objects.filter(user=self.request.user).first()
+
+        if not usuario_clinica:
+            return context  # ou redirect
+
+        clinica = usuario_clinica.clinica
 
         # 📅 Datas base
         agora = timezone.now()
@@ -86,17 +90,12 @@ class ClinicaDashboardView(LoginRequiredMixin, TemplateView):
             "servico"
         ).order_by("data", "horario")
 
-        # 🔒 Regra única de edição
         for a in agendamentos:
             a.pode_editar = a.data >= hoje
 
-        # 📌 Agendamentos de hoje
         agendamentos_hoje = [a for a in agendamentos if a.data == hoje]
-
-        # ⏭️ Agendamentos de amanhã
         agendamentos_amanha = [a for a in agendamentos if a.data == amanha]
 
-        # 📆 Agendamentos da semana (exclui hoje e amanhã)
         agendamentos_semana = Agendamento.objects.filter(
             clinica=clinica,
             data__gt=amanha,
@@ -107,7 +106,6 @@ class ClinicaDashboardView(LoginRequiredMixin, TemplateView):
             "servico"
         ).order_by("data", "horario")
 
-        # 🧠 Contexto final
         context.update({
             "clinica": clinica,
             "agendamentos": agendamentos,

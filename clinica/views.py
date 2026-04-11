@@ -33,7 +33,11 @@ from agendamentos.utils import (
     registrar_envio_whatsapp
 )
 
-
+def get_clinica(request):
+    uc = UsuarioClinica.objects.filter(user=request.user).first()
+    if not uc:
+        return None
+    return uc.clinica
 
 class ClinicaLoginView(View):
     template_name = "clinica/login.html"
@@ -61,12 +65,18 @@ class ClinicaDashboardView(LoginRequiredMixin, TemplateView):
         context = super().get_context_data(**kwargs)
 
         # 🔒 pega clínica com segurança
-        usuario_clinica = UsuarioClinica.objects.filter(user=self.request.user).first()
+        """ AJUESTE AQUI ! usuario_clinica = UsuarioClinica.objects.filter(user=self.request.user).first()
 
         if not usuario_clinica:
             return context  # ou redirect
 
-        clinica = usuario_clinica.clinica
+        clinica = usuario_clinica.clinica"""
+
+        clinica = get_clinica(self.request)
+
+        if not clinica:
+            #return context  # ou redirect
+            return redirect("clinica_login")
 
         # 📅 Datas base
         agora = timezone.now()
@@ -131,7 +141,10 @@ def clinica_logout(request):
 #@permission_required("agendamentos.gerenciar_agendamentos", raise_exception=True)
 @permission_required("agendamentos.gerenciar_profissionais", raise_exception=True)
 def disponibilidade_create(request):
-    clinica = request.user.usuarioclinica.clinica
+    # ajuste aqui clinica = request.user.usuarioclinica.clinica
+    clinica = get_clinica(request)
+    if not clinica:
+        return redirect("clinica_login")
     profissionais = Profissional.objects.filter(clinica=clinica)
 
     dias_semana = [
@@ -209,7 +222,10 @@ def disponibilidade_create(request):
 @login_required
 @permission_required("agendamentos.gerenciar_agendamentos", raise_exception=True)
 def disponibilidade_list(request):
-    clinica = request.user.usuarioclinica.clinica
+    # ajuste aqui clinica = request.user.usuarioclinica.clinica
+    clinica = get_clinica(request)
+    if not clinica:
+        return redirect("clinica_login")
 
     disponibilidades = Disponibilidade.objects.filter(
         clinica=clinica
@@ -241,12 +257,17 @@ def disponibilidade_delete(request, pk):
     if request.method != "POST":
         return redirect("disponibilidade_list")
 
-    clinica = clinica = request.user.usuarioclinica.clinica
+    clinica = get_clinica(request)
 
-    disponibilidade = Disponibilidade.objects.get(
+    if not clinica:
+        return redirect("clinica_login")
+
+    disponibilidade = get_object_or_404(
+        Disponibilidade,
         pk=pk,
         clinica=clinica
     )
+    
 
     existe_agendamento = Agendamento.objects.filter(
         clinica=clinica,
@@ -271,7 +292,10 @@ def disponibilidade_delete(request, pk):
 @login_required
 @permission_required("agendamentos.gerenciar_agendamentos", raise_exception=True)
 def disponibilidade_edit(request, pk):
-    clinica = request.user.usuarioclinica.clinica
+    # ajueste aqui clinica = request.user.usuarioclinica.clinica
+    clinica = get_clinica(request)
+    if not clinica:
+        return redirect("clinica_login")
 
     disponibilidade = get_object_or_404(
         Disponibilidade,
@@ -361,7 +385,10 @@ def disponibilidade_tem_agendamento(disponibilidade):
 @permission_required("agendamentos.gerenciar_agendamentos", raise_exception=True)
 @require_POST
 def agendamento_delete(request, pk):
-    clinica = request.user.usuarioclinica.clinica
+    #ajuste aqui clinica = request.user.usuarioclinica.clinica
+    clinica = get_clinica(request)
+    if not clinica:
+        return redirect("clinica_login")
     agendamento = get_object_or_404(
         Agendamento,
         pk=pk,
@@ -424,7 +451,10 @@ def agendamento_delete(request, pk):
 def agendamento_edit(request, pk):
     print("******************************")
     print("         Def agenamento edit                  ")
-    clinica = request.user.usuarioclinica.clinica
+   #ajuste aqui  clinica = request.user.usuarioclinica.clinica
+    clinica = get_clinica(request)
+    if not clinica:
+        return redirect("clinica_login")
     
 
     agendamento = get_object_or_404(
@@ -504,7 +534,11 @@ def agendamento_edit(request, pk):
 @login_required
 @permission_required("agendamentos.ver_relatorios", raise_exception=True)
 def relatorio_agendamentos_csv(request):
-    clinica = request.user.usuarioclinica.clinica
+   #ajuste aqui clinica = request.user.usuarioclinica.clinica
+    clinica = get_clinica(request)
+
+    if not clinica:
+        return redirect("clinica_login")
      # 🔥 VALIDA PLANO AQUI
     if not clinica.plano.tem_relatorios:
         return HttpResponse("Seu plano não permite relatórios")
@@ -555,7 +589,11 @@ def relatorio_agendamentos_csv(request):
 @login_required
 @permission_required("agendamentos.ver_relatorios", raise_exception=True)
 def relatorio_agendamentos_pdf(request):
-    clinica = request.user.usuarioclinica.clinica
+    #clinica = request.user.usuarioclinica.clinica
+    clinica = get_clinica(request)
+
+    if not clinica:
+        return redirect("clinica_login")
     # 🔥 VALIDA PLANO AQUI
     if not clinica.plano.tem_relatorios:
         return HttpResponse("Seu plano não permite relatórios")
@@ -636,7 +674,11 @@ def relatorio_agendamentos_pdf(request):
 @login_required
 @permission_required("agendamentos.ver_relatorios", raise_exception=True)
 def relatorio_agendamentos_html(request):
-    clinica = request.user.usuarioclinica.clinica
+    #clinica = request.user.usuarioclinica.clinica
+    clinica = get_clinica(request)
+
+    if not clinica:
+        return redirect("clinica_login")
     # 🔥 VALIDA PLANO AQUI
     if not clinica.plano.tem_relatorios:
         return HttpResponse("Seu plano não permite relatórios")
@@ -667,7 +709,11 @@ def relatorio_agendamentos_html(request):
 
 @login_required
 def minha_conta(request):
-    clinica = Clinica.objects.filter(user=request.user).first()
+    #clinica = Clinica.objects.filter(user=request.user).first()
+    clinica = get_clinica(request)
+
+    if not clinica:
+        return redirect("clinica_login")
     agora = timezone.now()
 
     # WhatsApp usado no mês atual
@@ -710,7 +756,11 @@ def minha_conta(request):
 @login_required
 @permission_required("clinica.view_plano", raise_exception=True)
 def planos(request):
-    clinica = request.user.usuarioclinica.clinica
+    #clinica = request.user.usuarioclinica.clinica
+    clinica = get_clinica(request)
+
+    if not clinica:
+        return redirect("clinica_login")
     planos = Plano.objects.all().order_by("preco")
 
     return render(
@@ -725,7 +775,11 @@ def planos(request):
 #@permission_required("clinica.gerenciar_profissionais", raise_exception=True)
 @permission_required("agendamentos.gerenciar_profissionais", raise_exception=True)
 def profissional_create(request):
-    clinica = request.user.usuarioclinica.clinica
+    #clinica = request.user.usuarioclinica.clinica
+    clinica = get_clinica(request)
+
+    if not clinica:
+        return redirect("clinica_login")
 
     # 🔥 VALIDAÇÃO DO PLANO
     if not PlanoService.pode_criar_profissional(clinica):
@@ -750,7 +804,11 @@ def profissional_create(request):
 @login_required
 @permission_required("agendamentos.gerenciar_servicos", raise_exception=True)
 def servico_create(request):
-    clinica = request.user.usuarioclinica.clinica
+    #clinica = request.user.usuarioclinica.clinica
+    clinica = get_clinica(request)
+
+    if not clinica:
+        return redirect("clinica_login")
     form = ServicoForm(request.POST or None)
 
     if not PlanoService.pode_criar_servico(clinica):
@@ -767,7 +825,12 @@ def servico_create(request):
 @login_required
 @permission_required("agendamentos.gerenciar_profissionais", raise_exception=True)
 def profissional_update(request, pk):
-    clinica = request.user.usuarioclinica.clinica
+    #clinica = request.user.usuarioclinica.clinica
+    clinica = get_clinica(request)
+
+    if not clinica:
+        return redirect("clinica_login")
+    form = ServicoForm(request.POST or None)
 
     profissional = get_object_or_404(
         Profissional,
@@ -799,7 +862,12 @@ def profissional_update(request, pk):
 @login_required
 @permission_required("agendamentos.gerenciar_servicos", raise_exception=True)
 def servico_update(request, pk):
-    clinica = request.user.usuarioclinica.clinica
+    #clinica = request.user.usuarioclinica.clinica
+    clinica = get_clinica(request)
+
+    if not clinica:
+        return redirect("clinica_login")
+    form = ServicoForm(request.POST or None)
 
     servico = get_object_or_404(
         Servico,
@@ -826,14 +894,24 @@ def servico_update(request, pk):
 @login_required
 @permission_required("agendamentos.gerenciar_servicos", raise_exception=True)
 def servico_list(request):
-    clinica = request.user.usuarioclinica.clinica
+    #clinica = request.user.usuarioclinica.clinica
+    clinica = get_clinica(request)
+
+    if not clinica:
+        return redirect("clinica_login")
+    form = ServicoForm(request.POST or None)
     servicos = Servico.objects.filter(clinica=clinica)
     return render(request, "clinica/servico_list.html", {"servicos": servicos})
     
 @login_required
 @permission_required("agendamentos.gerenciar_profissionais", raise_exception=True)
 def profissional_list(request):
-    clinica = request.user.usuarioclinica.clinica
+    #clinica = request.user.usuarioclinica.clinica
+    clinica = get_clinica(request)
+
+    if not clinica:
+        return redirect("clinica_login")
+    form = ServicoForm(request.POST or None)
     profissionais = Profissional.objects.filter(clinica=clinica)
     return render(
         request,
@@ -845,7 +923,12 @@ def profissional_list(request):
 @permission_required("agendamentos.gerenciar_profissionais", raise_exception=True)
 @require_POST
 def profissional_delete(request, pk):
-    clinica = request.user.usuarioclinica.clinica
+    #clinica = request.user.usuarioclinica.clinica
+    clinica = get_clinica(request)
+
+    if not clinica:
+        return redirect("clinica_login")
+    form = ServicoForm(request.POST or None)
 
     profissional = get_object_or_404(
         Profissional,
@@ -866,7 +949,12 @@ def profissional_delete(request, pk):
 @permission_required("agendamentos.gerenciar_servicos", raise_exception=True)
 @require_POST
 def servico_delete(request, pk):
-    clinica = request.user.usuarioclinica.clinica
+    #clinica = request.user.usuarioclinica.clinica
+    clinica = get_clinica(request)
+
+    if not clinica:
+        return redirect("clinica_login")
+    form = ServicoForm(request.POST or None)
 
     servico = get_object_or_404(
         Servico,
@@ -885,7 +973,12 @@ def servico_delete(request, pk):
 
 @login_required
 def agenda_semana(request):
-    clinica = request.user.usuarioclinica.clinica
+    #clinica = request.user.usuarioclinica.clinica
+    clinica = get_clinica(request)
+
+    if not clinica:
+        return redirect("clinica_login")
+    form = ServicoForm(request.POST or None)
 
     hoje = timezone.now().date()
     fim_semana = hoje + timedelta(days=7)
@@ -912,7 +1005,12 @@ def agenda_semana(request):
 @login_required
 @permission_required("agendamentos.gerenciar_agendamentos", raise_exception=True)
 def prontuario_paciente(request, paciente_id):
-    clinica = request.user.usuarioclinica.clinica
+    #clinica = request.user.usuarioclinica.clinica
+    clinica = get_clinica(request)
+
+    if not clinica:
+        return redirect("clinica_login")
+    form = ServicoForm(request.POST or None)
 
     paciente = get_object_or_404(
         Paciente.objects.filter(
@@ -970,7 +1068,12 @@ def prontuario_paciente(request, paciente_id):
 @login_required
 @permission_required("agendamentos.gerenciar_agendamentos", raise_exception=True)
 def prontuario_busca(request):
-    clinica = request.user.usuarioclinica.clinica
+    #clinica = request.user.usuarioclinica.clinica
+    clinica = get_clinica(request)
+
+    if not clinica:
+        return redirect("clinica_login")
+    form = ServicoForm(request.POST or None)
     termo = request.GET.get("q", "").strip()
 
     pacientes_ids = set(

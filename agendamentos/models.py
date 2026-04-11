@@ -34,7 +34,9 @@ class Clinica(models.Model):
             ("gerenciar_servicos", "Pode gerenciar serviços"),
             ("gerenciar_profissionais", "Pode gerenciar profissionais"),
             ("ver_relatorios", "Pode ver relatórios"),
+            ("gerenciar_prontuario", "Pode gerenciar prontuario"),
             ("gerenciar_usuarios", "Pode gerenciar usuarios"),
+            ("gerenciar_disponibilidade", "Pode gerenciar disponibilidade"),
         ]
 
     def save(self, *args, **kwargs):

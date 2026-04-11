@@ -8,7 +8,7 @@
     </li>
     {% endif %}
 
-    {% if perms.agendamentos.gerenciar_agendamentos %}
+    {% if perms.agendamentos.gerenciar_disponibilidade %}
     <li class="nav-item">
         <a href="{% url 'disponibilidade_list' %}" class="nav-link">
             📅 Disponibilidades
@@ -21,7 +21,7 @@
             📆 Agendamentos da semana
         </a>
     </li>
-    {% if perms.agendamentos.gerenciar_agendamentos %}
+    {% if perms.agendamentos.gerenciar_prontuario %}
     <li class="nav-item">
         <a href="{% url 'prontuario_busca' %}" class="nav-link">
             🗂️ Prontuário

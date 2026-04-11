@@ -4,7 +4,7 @@ from django.contrib.auth.decorators import login_required, permission_required
 from .models import Paciente, Servico, Profissional, Clinica, Agendamento, Disponibilidade, Prontuario
 from agendamentos.utils import (pode_enviar_whatsapp,registrar_envio_whatsapp, enviar_whatsapp)
 from django.views.generic import TemplateView
-from agendamentos.models import WhatsappLog,Paciente
+from agendamentos.models import WhatsappLog,Paciente, UsuarioClinica
 from datetime import datetime, timedelta, date
 from django.views.decorators.http import require_POST
 from django.contrib import messages
@@ -14,7 +14,8 @@ from agendamentos.utils import normalizar_telefone
 import json
 import re
 
-
+def get_clinica_usuario(user):
+    return UsuarioClinica.objects.filter(user=user).first()
 
 # PASSO 1 - TELEFONE
 def passo1_telefone(request, clinica_slug):
@@ -322,7 +323,7 @@ def clinica_home(request, clinica_slug):
     return render(request, "agendamentos/clinica_home.html", {"clinica": clinica})
 
 
-@login_required
+"""@login_required
 def prontuario_list(request, paciente_id):
     paciente = get_object_or_404(Paciente, id=paciente_id)
 
@@ -334,10 +335,32 @@ def prontuario_list(request, paciente_id):
     return render(request, "agendamentos/prontuario_list.html", {
         "paciente": paciente,
         "prontuarios": prontuarios
+    })"""
+@login_required
+def prontuario_list(request, paciente_id):
+    uc = get_clinica_usuario(request.user)
+
+    if not uc:
+        return redirect('clinica_login')
+
+    paciente = get_object_or_404(
+        Paciente,
+        id=paciente_id,
+        clinica=uc.clinica  # 🔥 SEGURANÇA
+    )
+
+    prontuarios = Prontuario.objects.filter(
+        paciente=paciente,
+        clinica=uc.clinica
+    )
+
+    return render(request, "agendamentos/prontuario_list.html", {
+        "paciente": paciente,
+        "prontuarios": prontuarios
     })
 
 
-
+"""
 @login_required
 def prontuario_create(request, paciente_id):
     paciente = get_object_or_404(Paciente, id=paciente_id)
@@ -356,9 +379,37 @@ def prontuario_create(request, paciente_id):
 
     return render(request, "agendamentos/prontuario_form.html", {
         "paciente": paciente
-    })
+    })"""
 
 @login_required
+def prontuario_create(request, paciente_id):
+    uc = get_clinica_usuario(request.user)
+
+    if not uc:
+        return redirect('clinica_login')
+
+    paciente = get_object_or_404(
+        Paciente,
+        id=paciente_id,
+        clinica=uc.clinica  # 🔥 SEGURANÇA
+    )
+
+    if request.method == "POST":
+        anotacoes = request.POST.get("anotacoes")
+
+        Prontuario.objects.create(
+            clinica=uc.clinica,
+            paciente=paciente,
+            profissional=request.user.profissional,
+            anotacoes=anotacoes
+        )
+
+        return redirect("prontuario_list", paciente_id=paciente.id)
+
+    return render(request, "agendamentos/prontuario_form.html", {
+        "paciente": paciente
+    })
+"""@login_required
 def prontuario_edit(request, prontuario_id):
     prontuario = get_object_or_404(
         Prontuario,
@@ -375,12 +426,62 @@ def prontuario_edit(request, prontuario_id):
         "prontuario": prontuario
     })
 
+"""
 @login_required
+def prontuario_edit(request, prontuario_id):
+    uc = get_clinica_usuario(request.user)
+
+    if not uc:
+        return redirect('clinica_login')
+
+    prontuario = get_object_or_404(
+        Prontuario,
+        id=prontuario_id,
+        clinica=uc.clinica
+    )
+
+    if request.method == "POST":
+        prontuario.anotacoes = request.POST.get("anotacoes")
+        prontuario.save()
+        return redirect("clinica_dashboard")
+
+    return render(request, "agendamentos/prontuario_form.html", {
+        "prontuario": prontuario
+    })
+
+"""@login_required
 def finalizar_agendamento(request, pk):
     agendamento = get_object_or_404(
         Agendamento,
         pk=pk,
         clinica=request.user.usuarioclinica.clinica
+    )
+
+    if agendamento.status != "fechado":
+        agendamento.status = "fechado"
+        agendamento.save()
+
+        prontuario = Prontuario.objects.create(
+            clinica=agendamento.clinica,
+            paciente=agendamento.paciente,
+            profissional=agendamento.profissional,
+            agendamento=agendamento
+        )
+
+        return redirect("prontuario_edit", prontuario.id)
+
+    return redirect("clinica_dashboard")"""
+@login_required
+def finalizar_agendamento(request, pk):
+    uc = get_clinica_usuario(request.user)
+
+    if not uc:
+        return redirect('clinica_login')
+
+    agendamento = get_object_or_404(
+        Agendamento,
+        pk=pk,
+        clinica=uc.clinica
     )
 
     if agendamento.status != "fechado":

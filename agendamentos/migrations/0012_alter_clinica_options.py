@@ -12,6 +12,6 @@ class Migration(migrations.Migration):
     operations = [
         migrations.AlterModelOptions(
             name='clinica',
-            options={'permissions': [('ver_dashboard', 'Pode ver o dashboard'), ('gerenciar_agendamentos', 'Pode gerenciar agendamentos'), ('gerenciar_servicos', 'Pode gerenciar serviços'), ('gerenciar_profissionais', 'Pode gerenciar profissionais'), ('ver_relatorios', 'Pode ver relatórios'), ("gerenciar_usuarios", "Pode gerenciar usuarios")]},
+            options={'permissions': [('ver_dashboard', 'Pode ver o dashboard'), ('gerenciar_agendamentos', 'Pode gerenciar agendamentos'), ('gerenciar_servicos', 'Pode gerenciar serviços'), ('gerenciar_profissionais', 'Pode gerenciar profissionais'), ('ver_relatorios', 'Pode ver relatórios'), ("gerenciar_usuarios", "Pode gerenciar usuarios"), ("gerenciar_prontuario", "Pode gerenciar prontuario"),("gerenciar_disponibilidade", "Pode gerenciar disponibilidade")]},
         ),
     ]

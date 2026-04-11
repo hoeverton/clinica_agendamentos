@@ -1,5 +1,6 @@
 from django.utils import timezone
 from .models import WhatsappLog
+from agendamentos.models import UsuarioClinica
 import re
 import requests
 
@@ -26,33 +27,6 @@ def registrar_envio_whatsapp(clinica, telefone, tipo):
         telefone=telefone,
         tipo=tipo
     )
-
-"""def enviar_whatsapp(numero, mensagem):
-    url = "https://api.w-api.app/v1/message/send-text?instanceId=LITE-WT27X1-TCQBZE"
-
-    headers = {
-        "Authorization": "Bearer bhLTUq7lDpb98Gm26skyFLUqTYPg7Wnrq",
-        "Content-Type": "application/json"
-    }
-
-    payload = {
-        "phone": numero,
-        "message": mensagem
-    }
-
-    try:
-        response = requests.post(url, json=payload, headers=headers)
-
-        print("STATUS:", response.status_code)
-        print("RESPOSTA:", response.text)
-
-        return response.status_code == 200
-
-    except Exception as e:
-        print("Erro:", e)
-        return False
-"""
-
 
 def enviar_whatsapp(clinica, numero, mensagem):
 
@@ -92,3 +66,8 @@ def normalizar_telefone(numero):
         numero = "55" + numero
 
     return numero
+
+
+
+def get_clinica(user):
+    return UsuarioClinica.objects.filter(user=user).first()

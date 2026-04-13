@@ -5,6 +5,7 @@ from .decorators import paciente_logado
 from agendamentos.utils import normalizar_telefone
 from agendamentos.models import Paciente, Agendamento, Clinica
 from functools import wraps
+from pacientes.services import enviar_codigo_login
 
 def solicitar_codigo(request):
 
@@ -31,23 +32,33 @@ def solicitar_codigo(request):
 
         if paciente:
 
-            # ✅ salva clínica atual antes de limpar login
+            # 📌 pega clínica da sessão
             clinica_slug = request.session.get("clinica_slug")
 
-            # 🔐 remove apenas login antigo (NÃO usa flush)
+            clinica = None
+            if clinica_slug:
+                clinica = Clinica.objects.filter(
+                    slug=clinica_slug
+                ).first()
+
+            # 📌 salva telefone na sessão (IMPORTANTE)
+            request.session["telefone_login"] = telefone
+
+            # 🔐 remove login antigo (mantém clínica)
             request.session.pop("paciente_id", None)
 
-            # ✅ restaura clínica na sessão
-            if clinica_slug:
-                request.session["clinica_slug"] = clinica_slug
-
-            # gera novo código OTP
+            # 🔢 gera código (MODEL)
             paciente.gerar_codigo()
 
-            # simulação envio (depois vira WhatsApp)
-            print("##### Código enviado:", paciente.codigo_login)
+            # 📲 envia código (SERVICE)
+            if clinica:
+                enviar_codigo_login(paciente, clinica)
+            else:
+                print("⚠️ Clínica não encontrada — código não enviado")
 
-        # sempre vai para validar código
+            print("##### Código gerado:", paciente.codigo_login)
+
+        # sempre vai para validar
         return redirect("validar_codigo")
 
     return render(request, "pacientes/solicitar_codigo.html")

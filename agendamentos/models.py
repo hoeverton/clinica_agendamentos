@@ -91,6 +91,9 @@ class Paciente(models.Model):
     codigo_expira_em = models.DateTimeField(blank=True, null=True)
     tentativas_codigo = models.IntegerField(default=0)
 
+    bloqueado_ate = models.DateTimeField(null=True, blank=True)
+    bloqueios = models.IntegerField(default=0)
+
     def gerar_codigo(self):
         self.codigo_login = f"{random.randint(100000, 999999)}"
         self.codigo_expira_em = timezone.now() + timezone.timedelta(minutes=5)

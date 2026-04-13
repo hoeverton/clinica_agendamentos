@@ -1,5 +1,6 @@
 from django.shortcuts import render, redirect
 from django.utils import timezone
+from datetime import timedelta
 import re
 from .decorators import paciente_logado
 from agendamentos.utils import normalizar_telefone
@@ -64,20 +65,53 @@ def solicitar_codigo(request):
     return render(request, "pacientes/solicitar_codigo.html")
 
 def validar_codigo(request):
-    print("********** DEF Validar_ codigo*******")
-    if request.method == "POST":
-        telefone = normalizar_telefone(request.POST.get("telefone"))
-        codigo = request.POST.get("codigo")
-        print("TELEFONE11", telefone)
-        paciente = Paciente.objects.filter(
-            telefone=telefone,
-            codigo_login=codigo,
-            codigo_expira_em__gte=timezone.now()
-        ).first()
+    print("********** DEF validar_codigo **********")
 
-        if paciente:
+    if request.method == "POST":
+
+        # 🔒 pega telefone da sessão (mais seguro)
+        telefone = request.session.get("telefone_login")
+        codigo = request.POST.get("codigo")
+
+        print("TELEFONE:", telefone)
+
+        if not telefone:
+            return redirect("solicitar_codigo")
+
+        paciente = Paciente.objects.filter(telefone=telefone).first()
+
+        if not paciente:
+            return redirect("solicitar_codigo")
+
+        # 🔴 BLOQUEIO DEFINITIVO (suporte)
+        if paciente.bloqueios >= 3:
+            return render(request, "pacientes/validar_codigo.html", {
+                "erro": "Conta bloqueada. Entre em contato com a clínica."
+            })
+
+        # 🟡 BLOQUEIO TEMPORÁRIO
+        if paciente.bloqueado_ate and paciente.bloqueado_ate > timezone.now():
+            return render(request, "pacientes/validar_codigo.html", {
+                "erro": "Muitas tentativas. Tente novamente em alguns minutos."
+            })
+
+        # 🔄 RESET automático se já passou o tempo
+        if paciente.bloqueado_ate and paciente.bloqueado_ate <= timezone.now():
+            paciente.tentativas_codigo = 0
+            paciente.bloqueado_ate = None
+            paciente.save()
+
+        # 🔐 VALIDAÇÃO DO CÓDIGO
+        if (
+            paciente.codigo_login == codigo and
+            paciente.codigo_expira_em and
+            paciente.codigo_expira_em >= timezone.now()
+        ):
+
+            # login ok
             request.session["paciente_id"] = paciente.id
 
+            # limpa dados de segurança
             paciente.codigo_login = None
             paciente.codigo_expira_em = None
             paciente.tentativas_codigo = 0
@@ -86,10 +120,20 @@ def validar_codigo(request):
             return redirect("dashboard_paciente")
 
         else:
-            paciente = Paciente.objects.filter(telefone=telefone).first()
-            if paciente:
-                paciente.tentativas_codigo += 1
-                paciente.save()
+            # ❌ ERRO → incrementa tentativa
+            paciente.tentativas_codigo += 1
+
+            # atingiu limite → bloqueia
+            if paciente.tentativas_codigo >= 5:
+                paciente.bloqueado_ate = timezone.now() + timedelta(minutes=10)
+                paciente.tentativas_codigo = 0
+                paciente.bloqueios += 1
+
+            paciente.save()
+
+            return render(request, "pacientes/validar_codigo.html", {
+                "erro": "Código inválido ou expirado."
+            })
 
     return render(request, "pacientes/validar_codigo.html")
 

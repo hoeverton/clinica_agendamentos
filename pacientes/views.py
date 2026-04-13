@@ -17,7 +17,7 @@ def solicitar_codigo(request):
 
     if request.method == "POST":
 
-        # normaliza telefone
+        # 📞 normaliza telefone
         telefone = normalizar_telefone(
             request.POST.get("telefone")
         )
@@ -33,33 +33,61 @@ def solicitar_codigo(request):
 
         if paciente:
 
-            # 📌 pega clínica da sessão
-            clinica_slug = request.session.get("clinica_slug")
+            # 🔒 salva telefone na sessão
+            request.session["telefone_login"] = telefone
+
+            # 🔐 remove login antigo (sem apagar clínica)
+            request.session.pop("paciente_id", None)
+
+            # =========================
+            # 🔥 BUSCA CLÍNICA (ROBUSTO)
+            # =========================
 
             clinica = None
+
+            # 1️⃣ tenta pela sessão
+            clinica_slug = request.session.get("clinica_slug")
+
             if clinica_slug:
                 clinica = Clinica.objects.filter(
                     slug=clinica_slug
                 ).first()
 
-            # 📌 salva telefone na sessão (IMPORTANTE)
-            request.session["telefone_login"] = telefone
+            # 2️⃣ fallback → último agendamento
+            if not clinica:
+                ultimo_agendamento = (
+                    Agendamento.objects
+                    .filter(paciente=paciente)
+                    .select_related("clinica")
+                    .order_by("-id")
+                    .first()
+                )
 
-            # 🔐 remove login antigo (mantém clínica)
-            request.session.pop("paciente_id", None)
+                if ultimo_agendamento:
+                    clinica = ultimo_agendamento.clinica
 
-            # 🔢 gera código (MODEL)
+                    # salva novamente na sessão
+                    request.session["clinica_slug"] = clinica.slug
+
+            # 🚫 se ainda não tiver clínica
+            if not clinica:
+                return render(request, "pacientes/solicitar_codigo.html", {
+                    "erro": "Não foi possível identificar a clínica."
+                })
+
+            # =========================
+            # 🔢 GERA CÓDIGO (MODEL)
+            # =========================
             paciente.gerar_codigo()
 
-            # 📲 envia código (SERVICE)
-            if clinica:
-                enviar_codigo_login(paciente, clinica)
-            else:
-                print("⚠️ Clínica não encontrada — código não enviado")
+            # =========================
+            # 📲 ENVIA WHATSAPP (SERVICE)
+            # =========================
+            enviar_codigo_login(paciente, clinica)
 
             print("##### Código gerado:", paciente.codigo_login)
 
-        # sempre vai para validar
+        # sempre vai para validação
         return redirect("validar_codigo")
 
     return render(request, "pacientes/solicitar_codigo.html")

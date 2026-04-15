@@ -2,6 +2,9 @@
 from pathlib import Path
 import os
 
+from decouple import config, Csv
+
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -10,17 +13,20 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-25ji416%4l406)z4i6#4!scx3s4#adu2gfuz*v+9_d-6h85j$f'
+#SECRET_KEY = 'django-insecure-25ji416%4l406)z4i6#4!scx3s4#adu2gfuz*v+9_d-6h85j$f'
+SECRET_KEY = config('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = config('DEBUG', default=False, cast=bool)
 
-ALLOWED_HOSTS = [
+"""ALLOWED_HOSTS = [
     'agendafacilodonto.com.br',
     'www.agendafacilodonto.com.br',
     '127.0.0.1',
     '5.189.184.41',
-]
+]"""
+
+ALLOWED_HOSTS = config('ALLOWED_HOSTS', cast=Csv())
 #fff
 
 
@@ -123,7 +129,10 @@ USE_TZ = True
 
 
 STATIC_URL = '/static/'
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
+if not DEBUG:
+    STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+#STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 

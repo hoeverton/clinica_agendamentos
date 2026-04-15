@@ -1,6 +1,6 @@
 # Python
 __pycache__/
-*.pyc
+*.py[cod]
 
 # Virtualenv
 venv/
@@ -13,3 +13,7 @@ media/
 
 # Environment
 .env
+
+# Logs e sistema
+*.log
+.DS_Store

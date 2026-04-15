@@ -1102,3 +1102,17 @@ def prontuario_busca(request):
 @login_required
 def pagina_conectar_whatsapp(request):
     return render(request, "clinica/conectar_whatsapp.html")
+
+
+@login_required
+def escolher_plano(request, plano_id):
+    if not hasattr(request.user, 'clinica'):
+        raise Exception("Usuário não possui clínica")
+
+    clinica = request.user.clinica
+    plano = get_object_or_404(Plano, id=plano_id)
+
+    clinica.plano = plano
+    clinica.save()
+
+    return redirect('dashboard')

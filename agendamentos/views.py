@@ -323,19 +323,7 @@ def clinica_home(request, clinica_slug):
     return render(request, "agendamentos/clinica_home.html", {"clinica": clinica})
 
 
-"""@login_required
-def prontuario_list(request, paciente_id):
-    paciente = get_object_or_404(Paciente, id=paciente_id)
 
-    prontuarios = Prontuario.objects.filter(
-        paciente=paciente,
-        clinica=request.user.usuarioclinica.clinica
-    )
-
-    return render(request, "agendamentos/prontuario_list.html", {
-        "paciente": paciente,
-        "prontuarios": prontuarios
-    })"""
 @login_required
 def prontuario_list(request, paciente_id):
     uc = get_clinica_usuario(request.user)
@@ -360,26 +348,7 @@ def prontuario_list(request, paciente_id):
     })
 
 
-"""
-@login_required
-def prontuario_create(request, paciente_id):
-    paciente = get_object_or_404(Paciente, id=paciente_id)
 
-    if request.method == "POST":
-        anotacoes = request.POST.get("anotacoes")
-
-        Prontuario.objects.create(
-            clinica=request.user.usuarioclinica.clinica,
-            paciente=paciente,
-            profissional=request.user.profissional,
-            anotacoes=anotacoes
-        )
-
-        return redirect("prontuario_list", paciente_id=paciente.id)
-
-    return render(request, "agendamentos/prontuario_form.html", {
-        "paciente": paciente
-    })"""
 
 @login_required
 def prontuario_create(request, paciente_id):
@@ -409,24 +378,7 @@ def prontuario_create(request, paciente_id):
     return render(request, "agendamentos/prontuario_form.html", {
         "paciente": paciente
     })
-"""@login_required
-def prontuario_edit(request, prontuario_id):
-    prontuario = get_object_or_404(
-        Prontuario,
-        id=prontuario_id,
-        clinica=request.user.usuarioclinica.clinica
-    )
 
-    if request.method == "POST":
-        prontuario.anotacoes = request.POST.get("anotacoes")
-        prontuario.save()
-        return redirect("clinica_dashboard")
-
-    return render(request, "agendamentos/prontuario_form.html", {
-        "prontuario": prontuario
-    })
-
-"""
 @login_required
 def prontuario_edit(request, prontuario_id):
     uc = get_clinica_usuario(request.user)
@@ -449,28 +401,7 @@ def prontuario_edit(request, prontuario_id):
         "prontuario": prontuario
     })
 
-"""@login_required
-def finalizar_agendamento(request, pk):
-    agendamento = get_object_or_404(
-        Agendamento,
-        pk=pk,
-        clinica=request.user.usuarioclinica.clinica
-    )
 
-    if agendamento.status != "fechado":
-        agendamento.status = "fechado"
-        agendamento.save()
-
-        prontuario = Prontuario.objects.create(
-            clinica=agendamento.clinica,
-            paciente=agendamento.paciente,
-            profissional=agendamento.profissional,
-            agendamento=agendamento
-        )
-
-        return redirect("prontuario_edit", prontuario.id)
-
-    return redirect("clinica_dashboard")"""
 @login_required
 def finalizar_agendamento(request, pk):
     uc = get_clinica_usuario(request.user)

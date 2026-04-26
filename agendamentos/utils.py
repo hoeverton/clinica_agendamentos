@@ -1,6 +1,9 @@
 from django.utils import timezone
 from .models import WhatsappLog
-from agendamentos.models import UsuarioClinica
+from agendamentos.models import UsuarioClinica, Paciente, Agendamento
+import json
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
 import re
 import requests
 
@@ -71,3 +74,9 @@ def normalizar_telefone(numero):
 
 def get_clinica(user):
     return UsuarioClinica.objects.filter(user=user).first()
+
+
+
+
+
+

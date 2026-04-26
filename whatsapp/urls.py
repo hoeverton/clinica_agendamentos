@@ -6,7 +6,8 @@ urlpatterns = [
     path("whatsapp/", whatsapp_webhook),
     #path("conectar/", conectar_whatsapp),
     path("qr/", qr_code_whatsapp),
-    path("whatsapp/webhook/", webhook_whatsapp, name="webhook_whatsapp")
+    path("webhook/", webhook_whatsapp, name="webhook_whatsapp"),
+    
    
 ]
 

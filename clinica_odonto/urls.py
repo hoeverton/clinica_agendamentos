@@ -2,6 +2,7 @@ from django.contrib import admin
 from django.urls import path, include
 from django.contrib.auth import views as auth_views
 from .views import home, demo, cadastro
+from whatsapp.views import webhook_whatsapp
 
 
 urlpatterns = [
@@ -26,6 +27,8 @@ urlpatterns = [
     path('reset/<uidb64>/<token>/', auth_views.PasswordResetConfirmView.as_view(), name='password_reset_confirm'),
     path('reset/concluido/', auth_views.PasswordResetCompleteView.as_view(), name='password_reset_complete'),
     path('', include('usuarios.urls')),
+    path("webhook/", webhook_whatsapp),
+    
 
 ]
 

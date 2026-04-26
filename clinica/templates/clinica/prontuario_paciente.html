@@ -3,72 +3,157 @@
 {% block title %}Prontuário do paciente{% endblock %}
 
 {% block content %}
-<div class="container-fluid px-0 mt-3">
-    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
-        <h3 class="mb-0">🦷 Prontuário</h3>
-        <a href="{% url 'clinica_dashboard' %}" class="btn btn-outline-secondary btn-sm">
-            ⬅ Voltar ao dashboard
+
+<div class="max-w-5xl mx-auto">
+
+    <!-- Topo -->
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+
+        <div>
+            <h2 class="text-2xl md:text-4xl font-bold text-slate-800">
+                🦷 Prontuário
+            </h2>
+
+            <p class="text-slate-500 mt-1">
+                Histórico clínico do paciente
+            </p>
+        </div>
+
+        <a href="{% url 'clinica_dashboard' %}"
+           class="bg-slate-700 hover:bg-slate-800 text-white px-5 py-3 rounded-xl font-semibold">
+            ⬅ Voltar ao Dashboard
         </a>
+
     </div>
 
-    <div class="card shadow-sm mb-4">
-        <div class="card-body">
-            <h5 class="mb-1">{{ paciente.nome|default:"Paciente sem nome" }}</h5>
-            <p class="text-muted mb-0">📱 {{ paciente.telefone }}</p>
-        </div>
+    <!-- Paciente -->
+    <div class="bg-white rounded-2xl shadow-sm p-6 mb-8">
+
+        <h3 class="text-xl font-bold text-slate-800">
+            {{ paciente.nome|default:"Paciente sem nome" }}
+        </h3>
+
+        <p class="text-slate-500 mt-2">
+            📱 {{ paciente.telefone }}
+        </p>
+
     </div>
 
-    <div class="card shadow-sm mb-4">
-        <div class="card-header">Novo registro clínico</div>
-        <div class="card-body">
-            <form method="post">
-                {% csrf_token %}
-                <div class="mb-3">
-                    <label for="profissional" class="form-label">Dentista responsável (opcional)</label>
-                    <select name="profissional" id="profissional" class="form-select">
-                        <option value="">Selecione</option>
-                        {% for profissional in profissionais %}
-                            <option value="{{ profissional.id }}">{{ profissional.nome }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
+    <!-- Novo Registro -->
+    <div class="bg-white rounded-2xl shadow-sm p-6 md:p-8 mb-8">
 
-                <div class="mb-3">
-                    <label for="anotacoes" class="form-label">Descrição do trabalho realizado</label>
-                    <textarea
-                        name="anotacoes"
-                        id="anotacoes"
-                        class="form-control"
-                        rows="5"
-                        placeholder="Ex.: Restauração no dente 26, limpeza e orientações pós-procedimento."
-                        required
-                    ></textarea>
-                </div>
+        <h3 class="text-xl font-bold text-slate-800 mb-6">
+            Novo registro clínico
+        </h3>
 
-                <button type="submit" class="btn btn-primary">
-                    💾 Salvar prontuário
-                </button>
-            </form>
-        </div>
+        <form method="post" class="space-y-6">
+
+            {% csrf_token %}
+
+            <!-- Profissional -->
+            <div>
+
+                <label for="profissional"
+                       class="block text-sm font-semibold text-slate-700 mb-2">
+                    Dentista responsável (opcional)
+                </label>
+
+                <select name="profissional"
+                        id="profissional"
+                        class="w-full border border-slate-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-violet-500 focus:outline-none">
+
+                    <option value="">Selecione</option>
+
+                    {% for profissional in profissionais %}
+                        <option value="{{ profissional.id }}">
+                            {{ profissional.nome }}
+                        </option>
+                    {% endfor %}
+
+                </select>
+
+            </div>
+
+            <!-- Anotações -->
+            <div>
+
+                <label for="anotacoes"
+                       class="block text-sm font-semibold text-slate-700 mb-2">
+                    Descrição do trabalho realizado
+                </label>
+
+                <textarea
+                    name="anotacoes"
+                    id="anotacoes"
+                    rows="5"
+                    required
+                    placeholder="Ex.: Restauração no dente 26, limpeza e orientações pós-procedimento."
+                    class="w-full border border-slate-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-violet-500 focus:outline-none"
+                ></textarea>
+
+            </div>
+
+            <!-- Botão -->
+            <button type="submit"
+                    class="bg-violet-600 hover:bg-violet-700 text-white px-6 py-3 rounded-xl font-semibold shadow-sm">
+                💾 Salvar prontuário
+            </button>
+
+        </form>
+
     </div>
 
-    <h5 class="mb-3">Histórico do paciente</h5>
+    <!-- Histórico -->
+    <div class="mb-4">
+
+        <h3 class="text-xl font-bold text-slate-800">
+            Histórico do paciente
+        </h3>
+
+    </div>
+
     {% if prontuarios %}
-        <div class="list-group shadow-sm">
+
+        <div class="space-y-4">
+
             {% for item in prontuarios %}
-                <div class="list-group-item">
-                    <div class="d-flex justify-content-between flex-wrap gap-2">
-                        <strong>{{ item.data|date:"d/m/Y H:i" }}</strong>
-                        <span class="text-muted">
-                            {{ item.profissional.nome|default:"Dentista não informado" }}
-                        </span>
-                    </div>
-                    <p class="mb-0 mt-2">{{ item.anotacoes|linebreaksbr }}</p>
+
+            <div class="bg-white rounded-2xl shadow-sm p-6">
+
+                <div class="flex flex-col md:flex-row justify-between gap-2 mb-3">
+
+                    <strong class="text-slate-800">
+                        {{ item.data|date:"d/m/Y H:i" }}
+                    </strong>
+
+                    <span class="text-slate-500 text-sm">
+                        {{ item.profissional.nome|default:"Dentista não informado" }}
+                    </span>
+
                 </div>
+
+                <div class="text-slate-700 leading-relaxed">
+                    {{ item.anotacoes|linebreaksbr }}
+                </div>
+
+            </div>
+
             {% endfor %}
+
         </div>
+
     {% else %}
-        <p class="text-muted">Nenhum prontuário cadastrado para este paciente.</p>
+
+        <div class="bg-white rounded-2xl shadow-sm p-8 text-center">
+
+            <p class="text-slate-500 text-lg">
+                Nenhum prontuário cadastrado para este paciente.
+            </p>
+
+        </div>
+
     {% endif %}
+
 </div>
+
 {% endblock %}

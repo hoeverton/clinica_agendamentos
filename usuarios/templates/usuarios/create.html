@@ -2,49 +2,96 @@
 
 {% block content %}
 
-<div class="container mt-4">
+<div class="max-w-3xl mx-auto">
 
-    <div class="card shadow-sm col-md-6 mx-auto">
-        <div class="card-body">
+    <!-- Topo -->
+    <div class="mb-8">
 
-            <h4 class="mb-4 text-center">➕ Novo Usuário</h4>
+        <h2 class="text-2xl md:text-4xl font-bold text-slate-800">
+            ➕ Novo Usuário
+        </h2>
 
-            <form method="post">
-                {% csrf_token %}
+        <p class="text-slate-500 mt-1">
+            Cadastre um novo usuário e defina suas permissões
+        </p>
 
-                <div class="mb-3">
-                    <label>Usuário</label>
-                    <input type="text" name="username" class="form-control" required>
-                </div>
+    </div>
 
-                <div class="mb-3">
-                    <label>Senha</label>
-                    <input type="password" name="password" class="form-control" required>
-                </div>
+    <!-- Card -->
+    <div class="bg-white rounded-2xl shadow-sm p-6 md:p-8">
 
-                <div class="mb-3">
-                    <label>Tipo de Usuário</label>
-                    <select name="grupo" class="form-control" required>
-                        <option value="">Selecione</option>
-                        {% for grupo in grupos %}
-                            <option value="{{ grupo.name }}">{{ grupo.name }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
+        <form method="post" class="space-y-6">
 
-                <div class="d-flex justify-content-between">
-                    <a href="{% url 'usuarios_list' %}" class="btn btn-secondary">
-                        Voltar
-                    </a>
+            {% csrf_token %}
 
-                    <button type="submit" class="btn btn-success">
-                        Salvar
-                    </button>
-                </div>
+            <!-- Usuário -->
+            <div>
 
-            </form>
+                <label class="block text-sm font-semibold text-slate-700 mb-2">
+                    Usuário
+                </label>
 
-        </div>
+                <input type="text"
+                       name="username"
+                       required
+                       class="w-full border border-slate-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-violet-500 focus:outline-none">
+
+            </div>
+
+            <!-- Senha -->
+            <div>
+
+                <label class="block text-sm font-semibold text-slate-700 mb-2">
+                    Senha
+                </label>
+
+                <input type="password"
+                       name="password"
+                       required
+                       class="w-full border border-slate-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-violet-500 focus:outline-none">
+
+            </div>
+
+            <!-- Tipo -->
+            <div>
+
+                <label class="block text-sm font-semibold text-slate-700 mb-2">
+                    Tipo de Usuário
+                </label>
+
+                <select name="grupo"
+                        required
+                        class="w-full border border-slate-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-violet-500 focus:outline-none">
+
+                    <option value="">Selecione</option>
+
+                    {% for grupo in grupos %}
+                        <option value="{{ grupo.name }}">
+                            {{ grupo.name }}
+                        </option>
+                    {% endfor %}
+
+                </select>
+
+            </div>
+
+            <!-- Botões -->
+            <div class="flex flex-col md:flex-row gap-3 pt-2">
+
+                <a href="{% url 'usuarios_list' %}"
+                   class="w-full md:w-auto text-center bg-slate-600 hover:bg-slate-700 text-white px-6 py-3 rounded-xl font-semibold">
+                    Voltar
+                </a>
+
+                <button type="submit"
+                        class="w-full md:w-auto bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-xl font-semibold shadow-sm">
+                    Salvar
+                </button>
+
+            </div>
+
+        </form>
+
     </div>
 
 </div>

@@ -115,6 +115,16 @@ class ClinicaDashboardView(LoginRequiredMixin, TemplateView):
             "profissional",
             "servico"
         ).order_by("data", "horario")
+        
+        total_pacientes = Agendamento.objects.filter(
+            clinica=clinica
+        ).values('paciente').distinct().count()
+
+        servicos_mes = Agendamento.objects.filter(
+            clinica=clinica,
+            data__month=hoje.month,
+            data__year=hoje.year
+        ).count()
 
         context.update({
             "clinica": clinica,
@@ -125,6 +135,9 @@ class ClinicaDashboardView(LoginRequiredMixin, TemplateView):
             "today": hoje,
             "fim_semana": fim_semana,
             "whatsapp_usados": whatsapp_usados,
+            "total_pacientes": total_pacientes,
+            "servicos_mes": servicos_mes,
+            
         })
 
         return context
@@ -1116,3 +1129,6 @@ def escolher_plano(request, plano_id):
     clinica.save()
 
     return redirect('dashboard')
+
+def teste_tailwind(request):
+    return render(request, 'clinica/teste.html')

@@ -4,68 +4,139 @@
 
 {% block content %}
 
-<div class="container-fluid">
+<div class="max-w-7xl mx-auto">
 
-    <h3 class="mb-4">📅 Disponibilidade dos Profissionais</h3>
+    <!-- Topo -->
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
 
-    <!-- 🔔 MENSAGENS -->
+        <div>
+            <h2 class="text-2xl md:text-4xl font-bold text-slate-800">
+                📅 Disponibilidade dos Profissionais
+            </h2>
+
+            <p class="text-slate-500 mt-1">
+                Gerencie horários e dias disponíveis para atendimento
+            </p>
+        </div>
+
+        <a href="{% url 'disponibilidade_create' %}"
+           class="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-xl font-semibold shadow-sm">
+            ➕ Nova disponibilidade
+        </a>
+
+    </div>
+
+    <!-- Mensagens -->
     {% if messages %}
-        {% for message in messages %}
-            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-                {{ message }}
-                <button type="button"
-                        class="btn-close"
-                        data-bs-dismiss="alert"
-                        aria-label="Close">
-                </button>
-            </div>
-        {% endfor %}
-    {% endif %}
-    <!-- 🔔 FIM MENSAGENS -->
+        <div class="space-y-3 mb-6">
 
-    <a href="{% url 'disponibilidade_create' %}" class="btn btn-success mb-3">
-        ➕ Nova disponibilidade
-    </a>
+            {% for message in messages %}
+
+            <div class="rounded-xl px-4 py-3
+                {% if message.tags == 'success' %}
+                    bg-green-100 text-green-700
+                {% elif message.tags == 'error' %}
+                    bg-red-100 text-red-700
+                {% elif message.tags == 'warning' %}
+                    bg-yellow-100 text-yellow-700
+                {% else %}
+                    bg-slate-100 text-slate-700
+                {% endif %}
+            ">
+                {{ message }}
+            </div>
+
+            {% endfor %}
+
+        </div>
+    {% endif %}
 
     {% if disponibilidades %}
-        <table class="table table-bordered table-striped">
-            <thead class="table-light">
-                <tr>
-                    <th>Profissional</th>
-                    <th>Dia</th>
-                    <th>Horário</th>
-                    <th width="220">Ações</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for d in disponibilidades %}
-                <tr>
-                    <td>{{ d.profissional.nome }}</td>
-                    <td>{{ d.get_dia_semana_display }}</td>
-                    <td>{{ d.hora_inicio }} às {{ d.hora_fim }}</td>
-                    <td>
-                        <a href="{% url 'disponibilidade_edit' d.id %}"
-                           class="btn btn-sm btn-warning">
-                            Editar
-                        </a>
 
-                        <form action="{% url 'disponibilidade_delete' d.id %}"
-                              method="post"
-                              style="display:inline;"
-                              onsubmit="return confirm('Deseja realmente excluir esta disponibilidade?')">
-                            {% csrf_token %}
-                            <button type="submit"
-                                    class="btn btn-sm btn-danger">
-                                Excluir
-                            </button>
-                        </form>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+    <!-- Card tabela -->
+    <div class="bg-white rounded-2xl shadow-sm overflow-hidden">
+
+        <div class="overflow-x-auto">
+
+            <table class="min-w-full">
+
+                <thead class="bg-slate-100 text-slate-700 text-sm">
+
+                    <tr>
+                        <th class="text-left px-6 py-4">Profissional</th>
+                        <th class="text-left px-6 py-4">Dia</th>
+                        <th class="text-left px-6 py-4">Horário</th>
+                        <th class="text-left px-6 py-4">Ações</th>
+                    </tr>
+
+                </thead>
+
+                <tbody class="divide-y divide-slate-100">
+
+                    {% for d in disponibilidades %}
+
+                    <tr class="hover:bg-slate-50 transition">
+
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            {{ d.profissional.nome }}
+                        </td>
+
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            {{ d.get_dia_semana_display }}
+                        </td>
+
+                        <td class="px-6 py-4 whitespace-nowrap font-medium text-violet-600">
+                            {{ d.hora_inicio }} às {{ d.hora_fim }}
+                        </td>
+
+                        <td class="px-6 py-4">
+
+                            <div class="flex flex-wrap gap-2">
+
+                                <a href="{% url 'disponibilidade_edit' d.id %}"
+                                   class="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded-lg text-sm font-medium">
+                                    Editar
+                                </a>
+
+                                <form action="{% url 'disponibilidade_delete' d.id %}"
+                                      method="post"
+                                      onsubmit="return confirm('Deseja realmente excluir esta disponibilidade?')">
+
+                                    {% csrf_token %}
+
+                                    <button type="submit"
+                                       class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-medium">
+                                        Excluir
+                                    </button>
+
+                                </form>
+
+                            </div>
+
+                        </td>
+
+                    </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
     {% else %}
-        <p>Nenhuma disponibilidade cadastrada.</p>
+
+    <div class="bg-white rounded-2xl shadow-sm p-8 text-center">
+
+        <p class="text-slate-500 text-lg">
+            Nenhuma disponibilidade cadastrada.
+        </p>
+
+    </div>
+
     {% endif %}
 
 </div>

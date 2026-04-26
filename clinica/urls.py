@@ -1,7 +1,7 @@
 from django.urls import path, include
 from .views import ClinicaLoginView, clinica_logout, disponibilidade_create, disponibilidade_list, disponibilidade_delete, disponibilidade_edit, agendamento_delete, agendamento_edit, minha_conta,profissional_create,servico_create, profissional_update, servico_update, servico_list, profissional_list, servico_delete, profissional_delete, agenda_semana,prontuario_paciente,prontuario_busca,pagina_conectar_whatsapp
 from clinica.views import ClinicaDashboardView, relatorio_agendamentos_csv, relatorio_agendamentos_pdf, relatorio_agendamentos_html, planos
-
+from .views import teste_tailwind
 
 
 urlpatterns = [
@@ -33,6 +33,7 @@ urlpatterns = [
     path("pacientes/<int:paciente_id>/prontuario/", prontuario_paciente, name="prontuario_paciente"),
     path("prontuarios/", prontuario_busca, name="prontuario_busca"),
     path("whatsapp/", pagina_conectar_whatsapp, name="conectar_whatsapp"),
+    path('teste/', teste_tailwind, name='teste_tailwind'),
     
     
 ]

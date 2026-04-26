@@ -1,177 +1,276 @@
-{% extends "clinica/base.html" %}
+{% extends 'clinica/base.html' %}
 
 {% block title %}Dashboard{% endblock %}
 
 {% block content %}
 
-<div class="container-fluid px-0 mt-3">
+<!-- Topo -->
+<div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
 
-    <h2 class="mb-4">📊 Dashboard </h2>
+    <div>
+        <h2 class="text-2xl md:text-4xl font-bold text-slate-800">
+            Olá, {{ clinica.nome }} 👋
+        </h2>
+        <p class="text-slate-500 mt-1 text-sm md:text-base">
+            Bem-vinda de volta à sua clínica
+        </p>
+    </div>
 
-    <!-- ================= CARDS ================= -->
-    <div class="row g-3">
+    <button class="w-full md:w-auto bg-violet-600 hover:bg-violet-700 text-white px-6 py-3 rounded-xl font-semibold shadow-lg">
+        + Novo Agendamento
+    </button>
+    <button class="w-full md:w-auto bg-teal-500  hover:bg-violet-700 text-white px-6 py-3 rounded-xl font-semibold shadow-lg">
+        + Novo Serviço
+    </button>
+    <button class="w-full md:w-auto bg-sky-500 hover:bg-violet-700 text-white px-6 py-3 rounded-xl font-semibold shadow-lg">
+        + Novo Profissional 
+    </button>
+    
 
-        <!-- Card Profissionais -->
-        <div class="col-12 col-md-6">
-            <div class="card shadow-sm h-100">
-                <div class="card-body text-center">
-                    <h5 class="card-title">Profissionais</h5>
-                    <p class="card-text">
-                        Gerencie os profissionais da clínica
-                    </p>
-                    {% if perms.agendamentos.gerenciar_profissionais %}
-                        <a href="{% url 'profissional_create' %}"
-                           class="btn btn-primary w-100 w-md-auto">
-                            ➕ Novo Profissional
-                        </a>
-                    {% endif %}
-                </div>
-            </div>
+
+</div>
+
+<!-- Cards -->
+<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6 mb-8">
+
+    <div class="bg-white p-6 rounded-2xl shadow-sm">
+        <p class="text-slate-500 text-sm">Agendamentos Hoje</p>
+        <h3 class="text-3xl md:text-4xl font-bold mt-2 text-violet-600">{{ agendamentos_hoje|length }}</h3>
+    </div>
+
+    <div class="bg-white p-6 rounded-2xl shadow-sm">
+        <p class="text-slate-500 text-sm">Pacientes Ativos</p>
+        <h3 class="text-3xl md:text-4xl font-bold mt-2 text-sky-600">{{ total_pacientes }}</h3>
+    </div>
+
+    <div class="bg-white p-6 rounded-2xl shadow-sm">
+        <p class="text-slate-500 text-sm">Serviços no mês</p>
+        <h3 class="text-3xl md:text-4xl font-bold mt-2 text-emerald-600">{{ servicos_mes }}</h3>
+    </div>
+
+    <div class="bg-white p-6 rounded-2xl shadow-sm">
+        <p class="text-slate-500 text-sm">Faturamento</p>
+        <h3 class="text-3xl md:text-4xl font-bold mt-2 text-violet-600">R$ 12.450</h3>
+    </div>
+
+</div>
+
+<!-- Conteúdo -->
+<div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+
+    <!-- Agenda -->
+    <div class="xl:col-span-2 bg-white rounded-2xl shadow-sm p-6">
+
+        <div class="mb-8">
+   
+    <p class="text-slate-500 mt-1">
+        Resumo dos seus agendamentos
+    </p>
+</div>
+
+<!-- Cards -->
+<div class="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
+
+    <div class="bg-white p-6 rounded-2xl shadow-sm">
+        <p class="text-slate-500 text-sm">Hoje</p>
+        <h3 class="text-3xl md:text-4xl font-bold mt-2 text-violet-600">
+            {{ agendamentos_hoje|length }}
+        </h3>
+    </div>
+
+    <div class="bg-white p-6 rounded-2xl shadow-sm">
+        <p class="text-slate-500 text-sm">Amanhã</p>
+        <h3 class="text-3xl md:text-4xl font-bold mt-2 text-sky-600">
+            {{ agendamentos_amanha|length }}
+        </h3>
+    </div>
+
+    <div class="bg-white p-6 rounded-2xl shadow-sm">
+        <p class="text-slate-500 text-sm">Próximos 7 dias</p>
+        <h3 class="text-3xl md:text-4xl font-bold mt-2 text-emerald-600">
+            {{ agendamentos_semana|length }}
+        </h3>
+    </div>
+
+</div>
+
+<!-- Hoje -->
+<div class="bg-white rounded-2xl shadow-sm p-6 mb-8">
+
+    <div class="flex justify-between items-center mb-6">
+        <h3 class="text-xl font-bold text-slate-800">
+            📌 Agendamentos de Hoje
+        </h3>
+    </div>
+
+    {% for a in agendamentos_hoje %}
+    <div class="border-b py-4 flex flex-col md:flex-row md:justify-between gap-3">
+
+        <div>
+            <p class="font-semibold">
+                {{ a.horario|time:"H:i" }} - {{ a.paciente.nome }}
+            </p>
+
+            <p class="text-sm text-slate-500">
+                {{ a.servico }} • {{ a.profissional }}
+            </p>
         </div>
 
-        <!-- Card Serviços -->
-        <div class="col-12 col-md-6">
-            <div class="card shadow-sm h-100">
-                <div class="card-body text-center">
-                    <h5 class="card-title">Serviços</h5>
-                    <p class="card-text">
-                        Cadastre e organize os serviços
-                    </p>
-                    {% if perms.agendamentos.gerenciar_servicos %}
-                        <a href="{% url 'servico_create' %}"
-                           class="btn btn-success w-100 w-md-auto">
-                            ➕ Novo Serviço
-                        </a>
-                    {% endif %}
-                </div>
-            </div>
+        <div class="flex gap-2 flex-wrap">
+
+            {% if perms.agendamentos.gerenciar_agendamentos %}
+            <a href="{% url 'agendamento_edit' a.id %}"
+               class="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-2 rounded-lg text-sm">
+                Editar
+            </a>
+            {% endif %}
+
+            <a href="{% url 'prontuario_paciente' a.paciente.id %}"
+               class="bg-sky-600 hover:bg-sky-700 text-white px-3 py-2 rounded-lg text-sm">
+                Prontuário
+            </a>
+
         </div>
 
     </div>
-
-    <!-- ================= HOJE ================= -->
-    <h4 class="mt-5">📌 Agendamentos de Hoje</h4>
-
-    {% if agendamentos_hoje %}
-        <div class="table-responsive">
-            <table class="table table-bordered table-sm align-middle">
-                <thead class="table-light">
-                    <tr>
-                        <th>Horário</th>
-                        <th>Paciente</th>
-                        <th>Telefone</th>
-                        <th>Serviço</th>
-                        <th>Profissional</th>
-                        <th style="min-width:150px;">Ações</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for a in agendamentos_hoje %}
-                        <tr>
-                            <td>{{ a.horario|time:"H:i" }}</td>
-                            <td>{{ a.paciente.nome }}</td>
-                            <td>{{ a.paciente.telefone }}</td>
-                            <td>{{ a.servico }}</td>
-                            <td>{{ a.profissional }}</td>
-                            <td>
-                                {% if a.pode_editar and perms.agendamentos.gerenciar_agendamentos %}
-                                    <a href="{% url 'agendamento_edit' a.id %}"
-                                       class="btn btn-sm btn-warning mb-1">
-                                        Editar
-                                    </a>
-                                    <a href="{% url 'prontuario_paciente' a.paciente.id %}"
-                                       class="btn btn-sm btn-info mb-1 text-white">
-                                        Prontuário
-                                    </a>
-
-                                    <form action="{% url 'agendamento_delete' a.id %}"
-                                          method="post"
-                                          style="display:inline;"
-                                          onsubmit="return confirm('Deseja realmente excluir este agendamento?')">
-                                        {% csrf_token %}
-                                        <button class="btn btn-sm btn-danger">
-                                            Excluir
-                                        </button>
-                                    </form>
-                                {% else %}
-                                    <span class="text-muted">—</span>
-                                {% endif %}
-                            </td>
-                        </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    {% else %}
-        <p class="text-muted">Nenhum agendamento hoje.</p>
-    {% endif %}
-
-    <!-- ================= AMANHÃ ================= -->
-    <h4 class="mt-5">⏭️ Agendamentos de Amanhã</h4>
-
-    {% if agendamentos_amanha %}
-        <div class="table-responsive">
-            <table class="table table-bordered table-sm align-middle">
-                <thead class="table-light">
-                    <tr>
-                        <th>Horário</th>
-                        <th>Paciente</th>
-                        <th>Telefone</th>
-                        <th>Serviço</th>
-                        <th>Profissional</th>
-                        <th style="min-width:150px;">Ações</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for a in agendamentos_amanha %}
-                        <tr>
-                            <td>{{ a.horario|time:"H:i" }}</td>
-                            <td>{{ a.paciente.nome }}</td>
-                            <td>{{ a.paciente.telefone }}</td>
-                            <td>{{ a.servico }}</td>
-                            <td>{{ a.profissional }}</td>
-                            <td>
-                                {% if a.pode_editar and perms.agendamentos.gerenciar_agendamentos %}
-                                    <a href="{% url 'agendamento_edit' a.id %}"
-                                       class="btn btn-sm btn-warning mb-1">
-                                        Editar
-                                    </a>
-                                    <a href="{% url 'prontuario_paciente' a.paciente.id %}"
-                                       class="btn btn-sm btn-info mb-1 text-white">
-                                        Prontuário
-                                    </a>
-
-                                    <form action="{% url 'agendamento_delete' a.id %}"
-                                          method="post"
-                                          style="display:inline;">
-                                        {% csrf_token %}
-                                        <button class="btn btn-sm btn-danger">
-                                            Excluir
-                                        </button>
-                                    </form>
-                                {% else %}
-                                    <span class="text-muted">—</span>
-                                {% endif %}
-                            </td>
-                        </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    {% else %}
-        <p class="text-muted">Nenhum agendamento amanhã.</p>
-    {% endif %}
-
-    <!-- ================= BOTÃO SEMANA ================= -->
-    {% if agendamentos_semana %}
-        <div class="mt-4 text-center text-md-start">
-            <a href="{% url 'agenda_semana' %}"
-               class="btn btn-outline-primary w-100 w-md-auto">
-                📆 Ver agendamentos da semana
-            </a>
-        </div>
-    {% endif %}
+    {% empty %}
+        <p class="text-slate-500">Nenhum agendamento hoje.</p>
+    {% endfor %}
 
 </div>
+
+<!-- Amanhã -->
+<div class="bg-white rounded-2xl shadow-sm p-6 mb-8">
+
+    <h3 class="text-xl font-bold text-slate-800 mb-6">
+        ⏭️ Agendamentos de Amanhã
+    </h3>
+
+    {% for a in agendamentos_amanha %}
+    <div class="border-b py-4">
+
+        <p class="font-semibold">
+            {{ a.horario|time:"H:i" }} - {{ a.paciente.nome }}
+        </p>
+
+        <p class="text-sm text-slate-500">
+            {{ a.servico }} • {{ a.profissional }}
+        </p>
+
+    </div>
+    {% empty %}
+        <p class="text-slate-500">Nenhum agendamento amanhã.</p>
+    {% endfor %}
+
+</div>
+
+<!-- Botão semana -->
+<div class="text-center md:text-left">
+
+    <a href="{% url 'agenda_semana' %}"
+       class="inline-block bg-violet-600 hover:bg-violet-700 text-white px-6 py-3 rounded-xl font-semibold">
+        📆 Ver agenda completa
+    </a>
+
+</div>
+        
+
+    </div>
+
+    
+    <!-- Gráfico -->
+    <div class="bg-white rounded-2xl shadow-sm p-6">
+
+          <h3 class="text-xl font-bold mb-2 text-slate-800">
+        Desempenho dos Agendamentos
+    </h3>
+
+    <p class="text-sm text-slate-500 mb-6">
+        Confirmados x Cancelados (últimos 7 dias)
+    </p>
+
+    <div class="h-52 md:h-64">
+        <canvas id="graficoAgendamento"></canvas>
+    </div>
+
+        <h3 class="text-xl font-bold mb-6 text-slate-800">
+            Resumo Financeiro
+        </h3>
+
+        <div class="h-52 md:h-64">
+            <canvas id="grafico"></canvas>
+        </div>
+       
+
+    </div>
+
+</div>
+
+<script>
+const ctx = document.getElementById('grafico');
+
+new Chart(ctx, {
+type: 'line',
+data: {
+labels: ['01 Abr','08 Abr','15 Abr','22 Abr','30 Abr'],
+datasets: [{
+data: [3000,7000,12000,9000,14500],
+borderColor: '#7c3aed',
+backgroundColor: 'rgba(124,58,237,0.10)',
+fill: true,
+tension: .4
+}]
+},
+options:{
+responsive:true,
+maintainAspectRatio:false,
+plugins:{
+legend:{display:false}
+},
+scales:{
+y:{beginAtZero:true}
+}
+}
+});
+const ctx2 = document.getElementById('graficoAgendamento');
+
+new Chart(ctx2, {
+type: 'bar',
+data: {
+labels: ['20/04','21/04','22/04','23/04','24/04','25/04','26/04'],
+datasets: [
+{
+label: 'Confirmados',
+data: [8,10,7,12,9,11,13],
+backgroundColor: '#10b981',
+borderRadius: 8
+},
+{
+label: 'Cancelados',
+data: [1,0,2,1,3,1,0],
+backgroundColor: '#ef4444',
+borderRadius: 8
+}
+]
+},
+options:{
+responsive:true,
+maintainAspectRatio:false,
+plugins:{
+legend:{
+position:'top'
+}
+},
+scales:{
+y:{
+beginAtZero:true,
+ticks:{
+stepSize:1
+}
+}
+}
+}
+});
+</script>
 
 {% endblock %}

@@ -1,63 +1,136 @@
 {% extends "clinica/base.html" %}
 
 {% block content %}
-<h3 class="mb-4">
-    📆 Agenda da semana ({{ hoje|date:"d/m" }} a {{ fim_semana|date:"d/m" }})
-</h3>
+
+<!-- Topo -->
+<div class="mb-8">
+
+    <h2 class="text-2xl md:text-4xl font-bold text-slate-800">
+        📆 Agenda da Semana
+    </h2>
+
+    <p class="text-slate-500 mt-1">
+        {{ hoje|date:"d/m" }} até {{ fim_semana|date:"d/m" }}
+    </p>
+
+</div>
 
 {% if agendamentos %}
 
-<div class="table-responsive">  <!-- 🔹 ADICIONADO -->
-<table class="table table-bordered table-sm">
-    <thead class="table-light">
-        <tr>
-            <th>Data</th>
-            <th>Horário</th>
-            <th>Paciente</th>
-            <th>Serviço</th>
-            <th>Profissional</th>
-            <th style="min-width:140px;">Ações</th> <!-- 🔹 pequena proteção -->
-        </tr>
-    </thead>
-    <tbody>
-    {% for a in agendamentos %}
-        <tr>
-            <td>{{ a.data|date:"d/m/Y" }}</td>
-            <td>{{ a.horario|time:"H:i" }}</td>
-            <td>{{ a.paciente.nome }}</td>
-            <td>{{ a.servico }}</td>
-            <td>{{ a.profissional }}</td>
-            <td>
-                {% if perms.agendamentos.gerenciar_agendamentos %}
-                    <a href="{% url 'agendamento_edit' a.id %}" 
-                       class="btn btn-sm btn-warning">
-                        ✏️ Editar
-                    </a>
+<!-- Card -->
+<div class="bg-white rounded-2xl shadow-sm overflow-hidden">
 
-                    <form action="{% url 'agendamento_delete' a.id %}"
-                          method="post"
-                          style="display:inline;"
-                          onsubmit="return confirm('Deseja realmente excluir este agendamento?')">
-                        {% csrf_token %}
-                        <button class="btn btn-sm btn-danger">
-                            Excluir
-                        </button>
-                    </form>
-                {% else %}
-                    <span class="text-muted">Somente leitura</span>
-                {% endif %}
-            </td>
-        </tr>
-    {% endfor %}
-    </tbody>
-</table>
-</div> <!-- 🔹 ADICIONADO -->
+    <div class="overflow-x-auto">
+
+        <table class="min-w-full">
+
+            <thead class="bg-slate-100 text-slate-700 text-sm">
+
+                <tr>
+                    <th class="text-left px-6 py-4">Data</th>
+                    <th class="text-left px-6 py-4">Horário</th>
+                    <th class="text-left px-6 py-4">Paciente</th>
+                    <th class="text-left px-6 py-4">Serviço</th>
+                    <th class="text-left px-6 py-4">Profissional</th>
+                    <th class="text-left px-6 py-4">Ações</th>
+                </tr>
+
+            </thead>
+
+            <tbody class="divide-y divide-slate-100">
+
+            {% for a in agendamentos %}
+
+                <tr class="hover:bg-slate-50 transition">
+
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        {{ a.data|date:"d/m/Y" }}
+                    </td>
+
+                    <td class="px-6 py-4 whitespace-nowrap font-semibold text-violet-600">
+                        {{ a.horario|time:"H:i" }}
+                    </td>
+
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        {{ a.paciente.nome }}
+                    </td>
+
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        {{ a.servico }}
+                    </td>
+
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        {{ a.profissional }}
+                    </td>
+
+                    <td class="px-6 py-4">
+
+                        {% if perms.agendamentos.gerenciar_agendamentos %}
+
+                        <div class="flex flex-wrap gap-2">
+
+                            <a href="{% url 'agendamento_edit' a.id %}"
+                               class="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-2 rounded-lg text-sm font-medium">
+                                ✏️ Editar
+                            </a>
+
+                            <form action="{% url 'agendamento_delete' a.id %}"
+                                  method="post"
+                                  onsubmit="return confirm('Deseja realmente excluir este agendamento?')">
+
+                                {% csrf_token %}
+
+                                <button type="submit"
+                                   class="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded-lg text-sm font-medium">
+                                    Excluir
+                                </button>
+
+                            </form>
+
+                        </div>
+
+                        {% else %}
+
+                        <span class="text-slate-400 text-sm">
+                            Somente leitura
+                        </span>
+
+                        {% endif %}
+
+                    </td>
+
+                </tr>
+
+            {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
 
 {% else %}
-<p class="text-muted">Nenhum agendamento para esta semana.</p>
+
+<div class="bg-white rounded-2xl shadow-sm p-8 text-center">
+
+    <p class="text-slate-500 text-lg">
+        Nenhum agendamento para esta semana.
+    </p>
+
+</div>
+
 {% endif %}
 
-<a href="{% url 'clinica_dashboard' %}" class="btn btn-secondary mt-3">
-    ⬅ Voltar ao dashboard
-</a>
+<!-- Botão voltar -->
+<div class="mt-6">
+
+    <a href="{% url 'clinica_dashboard' %}"
+       class="inline-block bg-slate-700 hover:bg-slate-800 text-white px-6 py-3 rounded-xl font-semibold">
+        ⬅ Voltar ao Dashboard
+    </a>
+
+</div>
+
 {% endblock %}

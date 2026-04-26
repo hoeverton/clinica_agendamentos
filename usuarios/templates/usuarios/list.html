@@ -2,65 +2,117 @@
 
 {% block content %}
 
-<div class="container mt-4">
+<div class="max-w-7xl mx-auto">
 
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h3>👥 Usuários da Clínica</h3>
-        <a href="{% url 'usuario_create' %}" class="btn btn-primary">
-            + Novo Usuário
+    <!-- Topo -->
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+
+        <div>
+            <h2 class="text-2xl md:text-4xl font-bold text-slate-800">
+                👥 Usuários da Clínica
+            </h2>
+
+            <p class="text-slate-500 mt-1">
+                Gerencie acessos e permissões dos usuários
+            </p>
+        </div>
+
+        <a href="{% url 'usuario_create' %}"
+           class="bg-violet-600 hover:bg-violet-700 text-white px-6 py-3 rounded-xl font-semibold shadow-sm">
+            ➕ Novo Usuário
         </a>
+
     </div>
 
-    <div class="card shadow-sm">
-        <div class="card-body">
+    <!-- Tabela -->
+    <div class="bg-white rounded-2xl shadow-sm overflow-hidden">
 
-            <table class="table table-hover align-middle">
-                <thead class="table-light">
+        <div class="overflow-x-auto">
+
+            <table class="min-w-full">
+
+                <thead class="bg-slate-100 text-slate-700 text-sm">
+
                     <tr>
-                        <th>Usuário</th>
-                        <th>Grupo</th>
-                        <th>Ações</th>
+                        <th class="text-left px-6 py-4">Usuário</th>
+                        <th class="text-left px-6 py-4">Grupo</th>
+                        <th class="text-left px-6 py-4">Ações</th>
                     </tr>
+
                 </thead>
 
-                <tbody>
+                <tbody class="divide-y divide-slate-100">
+
                     {% for uc in usuarios %}
-                    <tr>
-                        <td>{{ uc.user.username }}</td>
 
-                        <td>
-                            {% for grupo in uc.user.groups.all %}
-                                <span class="badge bg-info text-dark">
-                                    {{ grupo.name }}
-                                </span>
-                            {% empty %}
-                                <span class="text-muted">Sem grupo</span>
-                            {% endfor %}
+                    <tr class="hover:bg-slate-50 transition">
+
+                        <!-- Usuário -->
+                        <td class="px-6 py-4 font-medium text-slate-800 whitespace-nowrap">
+                            {{ uc.user.username }}
                         </td>
 
-                        <td>
-                            <a href="{% url 'usuario_update' uc.user.id %}" class="btn btn-sm btn-warning">
-                                ✏️ Editar
-                            </a>
+                        <!-- Grupo -->
+                        <td class="px-6 py-4">
 
-                            <a href="{% url 'usuario_delete' uc.user.id %}" 
-                               class="btn btn-sm btn-danger"
-                               onclick="return confirm('Tem certeza que deseja excluir este usuário?')">
-                                🗑️ Excluir
-                            </a>
+                            <div class="flex flex-wrap gap-2">
+
+                                {% for grupo in uc.user.groups.all %}
+
+                                    <span class="bg-sky-100 text-sky-700 px-3 py-1 rounded-full text-xs font-medium">
+                                        {{ grupo.name }}
+                                    </span>
+
+                                {% empty %}
+
+                                    <span class="text-slate-400">
+                                        Sem grupo
+                                    </span>
+
+                                {% endfor %}
+
+                            </div>
+
                         </td>
+
+                        <!-- Ações -->
+                        <td class="px-6 py-4">
+
+                            <div class="flex flex-wrap gap-2">
+
+                                <a href="{% url 'usuario_update' uc.user.id %}"
+                                   class="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded-lg text-sm font-medium">
+                                    ✏️ Editar
+                                </a>
+
+                                <a href="{% url 'usuario_delete' uc.user.id %}"
+                                   onclick="return confirm('Tem certeza que deseja excluir este usuário?')"
+                                   class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-medium">
+                                    🗑️ Excluir
+                                </a>
+
+                            </div>
+
+                        </td>
+
                     </tr>
+
                     {% empty %}
+
                     <tr>
-                        <td colspan="3" class="text-center text-muted">
+                        <td colspan="3" class="px-6 py-8 text-center text-slate-500">
                             Nenhum usuário cadastrado
                         </td>
                     </tr>
+
                     {% endfor %}
+
                 </tbody>
+
             </table>
 
         </div>
+
     </div>
 
 </div>

@@ -25,6 +25,7 @@ def solicitar_codigo(request):
         print("Telefone recebido:", telefone)
 
         paciente = Paciente.objects.filter(
+            clinica=clinica,
             telefone=telefone
         ).first()
 

@@ -45,7 +45,8 @@ def whatsapp_webhook(request):
     # =========================
     if conversa.etapa == "menu":
         if mensagem == "1":
-            servicos = Servico.objects.all()
+            
+            servicos = Servico.objects.filter(clinica=clinica)
 
             texto = "Escolha o serviço:\n\n"
             for i, s in enumerate(servicos, 1):
@@ -64,7 +65,8 @@ def whatsapp_webhook(request):
     # SERVIÇO
     # =========================
     if conversa.etapa == "servico":
-        servicos = list(Servico.objects.all())
+        servicos = list(Servico.objects.filter(clinica=clinica))
+        
 
         try:
             escolha = int(mensagem) - 1
@@ -89,7 +91,9 @@ def whatsapp_webhook(request):
         try:
             data_escolhida = datetime.strptime(mensagem, "%Y-%m-%d").date()
 
-            profissional = Profissional.objects.first()
+            profissional = Profissional.objects.filter(
+                clinica=clinica
+            ).first()
             clinica = Clinica.objects.first()
             duracao = conversa.servico.duracao_minutos
 
@@ -125,7 +129,7 @@ def whatsapp_webhook(request):
         try:
             horario = datetime.strptime(mensagem, "%H:%M").time()
 
-            paciente, _ = Paciente.objects.get_or_create(telefone=numero)
+            paciente, _ = Paciente.objects.get_or_create(clinica=clinica,telefone=numero)
 
             agendamento = Agendamento.objects.create(
                 paciente=paciente,

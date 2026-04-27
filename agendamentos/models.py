@@ -86,8 +86,10 @@ class Servico(models.Model):
 
 
 class Paciente(models.Model):
+    clinica = models.ForeignKey(Clinica, on_delete=models.CASCADE)
+
     nome = models.CharField(max_length=100, blank=True, null=True)
-    telefone = models.CharField(max_length=20, unique=True)
+    telefone = models.CharField(max_length=20)
 
     codigo_login = models.CharField(max_length=6, blank=True, null=True)
     codigo_expira_em = models.DateTimeField(blank=True, null=True)
@@ -95,6 +97,9 @@ class Paciente(models.Model):
 
     bloqueado_ate = models.DateTimeField(null=True, blank=True)
     bloqueios = models.IntegerField(default=0)
+
+    class Meta:
+        unique_together = ('clinica', 'telefone')
 
     def gerar_codigo(self):
         self.codigo_login = f"{random.randint(100000, 999999)}"
@@ -107,6 +112,14 @@ class Paciente(models.Model):
 
 
 class Agendamento(models.Model):
+
+    STATUS_CHOICES = (
+        ('pendente', 'Pendente'),
+        ('confirmado', 'Confirmado'),
+        ('concluido', 'Concluído'),
+        ('cancelado', 'Cancelado'),
+        ('faltou', 'Faltou'),
+    )
     clinica = models.ForeignKey(Clinica, on_delete=models.CASCADE)
     profissional = models.ForeignKey(Profissional, on_delete=models.CASCADE)
     servico = models.ForeignKey(Servico, on_delete=models.CASCADE)
@@ -114,6 +127,11 @@ class Agendamento(models.Model):
 
     data = models.DateField()
     horario = models.TimeField()
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default='pendente'
+    )
 
     criado_em = models.DateTimeField(auto_now_add=True)
 
@@ -209,14 +227,31 @@ class UsuarioClinica(models.Model):
     
 
 class ConversaWhatsapp(models.Model):
-    telefone = models.CharField(max_length=20, unique=True)
+    clinica = models.ForeignKey(Clinica, on_delete=models.CASCADE)
+
+    telefone = models.CharField(max_length=20)
     etapa = models.CharField(max_length=50, default="inicio")
 
-    servico = models.ForeignKey(Servico, null=True, blank=True, on_delete=models.SET_NULL)
-    profissional = models.ForeignKey(Profissional, null=True, blank=True, on_delete=models.SET_NULL)
+    servico = models.ForeignKey(
+        Servico,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL
+    )
+
+    profissional = models.ForeignKey(
+        Profissional,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL
+    )
+
     data = models.DateField(null=True, blank=True)
 
     atualizado_em = models.DateTimeField(auto_now=True)
 
+    class Meta:
+        unique_together = ('clinica', 'telefone')
+
     def __str__(self):
-        return f"{self.telefone} - {self.etapa}"
+        return f"{self.clinica.nome} - {self.telefone} - {self.etapa}"

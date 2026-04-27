@@ -33,6 +33,7 @@ def passo1_telefone(request, clinica_slug):
             messages.error(request, "Informe o telefone do paciente")
             return redirect("passo_telefone",clinica_slug=clinica_slug)
         paciente, created = Paciente.objects.get_or_create(
+            clinica=clinica,
             telefone=telefone,
             defaults={"nome": nome} if nome else {}
         )

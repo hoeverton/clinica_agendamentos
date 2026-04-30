@@ -73,9 +73,9 @@
             👁 Ocultar
         </button>
     </div>
-         <p id="valorFaturamento" class="text-4xl font-bold text-violet-600">
-        R$ 12.450
-    </p>
+        <p id="valorFaturamento" class="text-4xl font-bold text-violet-600">
+            R$ {{ faturamento|floatformat:2 }}
+        </p>
     </div>
 
 </div>
@@ -142,16 +142,19 @@
         </div>
 
         <div class="flex gap-2 flex-wrap">
-            <select 
-            class="border rounded-lg px-4 py-2 text-sm font-medium focus:ring-2 focus:ring-violet-500"
-        >
-            <option value="pendente">🟡 Pendente</option>
-            <option value="confirmado">🟢 Confirmado</option>
-            <option value="concluido">🔵 Concluído</option>
-            <option value="cancelado">🔴 Cancelado</option>
-            <option value="faltou">⚫ Faltou</option>
-        </select>
+           <select 
+                data-id="{{ a.id }}"
+                onchange="atualizarStatus(this)"
+                class="border rounded-lg px-4 py-2 text-sm font-medium focus:ring-2 focus:ring-violet-500"
+                >
 
+                <option value="pendente" {% if a.status == "pendente" %}selected{% endif %}>🟡 Pendente</option>
+                <option value="confirmado" {% if a.status == "confirmado" %}selected{% endif %}>🟢 Confirmado</option>
+                <option value="concluido" {% if a.status == "concluido" %}selected{% endif %}>🔵 Concluído</option>
+                <option value="cancelado" {% if a.status == "cancelado" %}selected{% endif %}>🔴 Cancelado</option>
+                <option value="faltou" {% if a.status == "faltou" %}selected{% endif %}>⚫ Faltou</option>
+
+           </select>
             {% if perms.agendamentos.gerenciar_agendamentos %}
             <a href="{% url 'agendamento_edit' a.id %}"
                class="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-2 rounded-lg text-sm">
@@ -192,15 +195,20 @@
             {{ a.servico }} • {{ a.profissional }}
         </p>
         <div class="flex gap-2 flex-wrap">
-            <select 
-            class="border rounded-lg px-4 py-2 text-sm font-medium focus:ring-2 focus:ring-violet-500"
-        >
-            <option value="pendente">🟡 Pendente</option>
-            <option value="confirmado">🟢 Confirmado</option>
-            <option value="concluido">🔵 Concluído</option>
-            <option value="cancelado">🔴 Cancelado</option>
-            <option value="faltou">⚫ Faltou</option>
-        </select>
+
+                <select 
+                data-id="{{ a.id }}"
+                onchange="atualizarStatus(this)"
+                class="border rounded-lg px-4 py-2 text-sm font-medium focus:ring-2 focus:ring-violet-500"
+                >
+
+                <option value="pendente" {% if a.status == "pendente" %}selected{% endif %}>🟡 Pendente</option>
+                <option value="confirmado" {% if a.status == "confirmado" %}selected{% endif %}>🟢 Confirmado</option>
+                <option value="concluido" {% if a.status == "concluido" %}selected{% endif %}>🔵 Concluído</option>
+                <option value="cancelado" {% if a.status == "cancelado" %}selected{% endif %}>🔴 Cancelado</option>
+                <option value="faltou" {% if a.status == "faltou" %}selected{% endif %}>⚫ Faltou</option>
+
+           </select>
 
             
 
@@ -239,7 +247,8 @@
     </p>
 
     <div class="h-52 md:h-64">
-        <canvas id="graficoAgendamento"></canvas>
+        
+        <canvas id="graficoAgendamentos" height="100"></canvas>
     </div>
 
         <h3 class="text-xl font-bold mb-6 text-slate-800">
@@ -247,7 +256,8 @@
         </h3>
 
         <div class="h-52 md:h-64">
-            <canvas id="grafico"></canvas>
+            
+            <canvas id="graficoFinanceiro"></canvas>
         </div>
        
 
@@ -255,77 +265,23 @@
 
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <script>
-const ctx = document.getElementById('grafico');
 
-new Chart(ctx, {
-type: 'line',
-data: {
-labels: ['01 Abr','08 Abr','15 Abr','22 Abr','30 Abr'],
-datasets: [{
-data: [3000,7000,12000,9000,14500],
-borderColor: '#7c3aed',
-backgroundColor: 'rgba(124,58,237,0.10)',
-fill: true,
-tension: .4
-}]
-},
-options:{
-responsive:true,
-maintainAspectRatio:false,
-plugins:{
-legend:{display:false}
-},
-scales:{
-y:{beginAtZero:true}
-}
-}
-});
-const ctx2 = document.getElementById('graficoAgendamento');
-
-new Chart(ctx2, {
-type: 'bar',
-data: {
-labels: ['20/04','21/04','22/04','23/04','24/04','25/04','26/04'],
-datasets: [
-{
-label: 'Confirmados',
-data: [8,10,7,12,9,11,13],
-backgroundColor: '#10b981',
-borderRadius: 8
-},
-{
-label: 'Cancelados',
-data: [1,0,2,1,3,1,0],
-backgroundColor: '#ef4444',
-borderRadius: 8
-}
-]
-},
-options:{
-responsive:true,
-maintainAspectRatio:false,
-plugins:{
-legend:{
-position:'top'
-}
-},
-scales:{
-y:{
-beginAtZero:true,
-ticks:{
-stepSize:1
-}
-}
-}
-}
-});
+// =========================
+// COPIAR LINK
+// =========================
 function copiarLink() {
     let texto = document.getElementById("link");
     texto.select();
     document.execCommand("copy");
     alert("Link copiado!");
 }
+
+// =========================
+// OCULTAR FATURAMENTO
+// =========================
 function toggleFaturamento() {
     const valor = document.getElementById("valorFaturamento");
     const botao = event.target;
@@ -338,6 +294,183 @@ function toggleFaturamento() {
         botao.innerText = "🙈 Mostrar";
     }
 }
+
+// =========================
+// CSRF
+// =========================
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie) {
+        let cookies = document.cookie.split(';');
+        for (let c of cookies) {
+            c = c.trim();
+            if (c.startsWith(name + '=')) {
+                cookieValue = decodeURIComponent(c.substring(name.length + 1));
+            }
+        }
+    }
+    return cookieValue;
+}
+
+// =========================
+// ATUALIZAR STATUS
+// =========================
+function atualizarStatus(el) {
+    const id = el.dataset.id;
+    const status = el.value;
+
+    console.log("ENVIANDO:", id, status);
+
+    fetch(`/clinica/agendamento/${id}/status/`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": getCookie("csrftoken")
+        },
+        body: JSON.stringify({ status: status })
+    })
+    .then(res => res.json())
+    .then(data => {
+        console.log("SALVO", data);
+        atualizarGrafico(); // 🔥 atualiza gráfico automaticamente
+    })
+    .catch(err => console.log("ERRO", err));
+}
+
+// =========================
+// GRÁFICO DINÂMICO
+// =========================
+let chartAgendamentos;
+
+function iniciarGrafico() {
+    fetch("/clinica/grafico/dados/")
+        .then(res => res.json())
+        .then(data => {
+
+            const ctx = document.getElementById("graficoAgendamentos").getContext("2d");
+
+            chartAgendamentos = new Chart(ctx, {
+                type: "line",
+                data: {
+                    labels: data.dias,
+                    datasets: [
+                        {
+                            label: "Confirmados",
+                            data: data.confirmados,
+                            borderColor: "#10b981",
+                            backgroundColor: "rgba(16,185,129,0.1)",
+                            tension: 0.4,
+                            fill: true
+                        },
+                        {
+                            label: "Cancelados",
+                            data: data.cancelados,
+                            borderColor: "#ef4444",
+                            backgroundColor: "rgba(239,68,68,0.1)",
+                            tension: 0.4,
+                            fill: true
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+
+        });
+}
+
+// =========================
+// ATUALIZAR GRÁFICO
+// =========================
+function atualizarGrafico() {
+    fetch("/clinica/grafico/dados/")
+        .then(res => res.json())
+        .then(data => {
+            chartAgendamentos.data.labels = data.dias;
+            chartAgendamentos.data.datasets[0].data = data.confirmados;
+            chartAgendamentos.data.datasets[1].data = data.cancelados;
+            chartAgendamentos.update();
+        });
+}
+
+// =========================
+// GRÁFICO FIXO (FINANCEIRO)
+// =========================
+function iniciarGraficoFinanceiro() {
+    const ctx2 = document.getElementById('grafico').getContext("2d");
+
+    new Chart(ctx2, {
+        type: 'line',
+        data: {
+            labels: ['01 Abr','08 Abr','15 Abr','22 Abr','30 Abr'],
+            datasets: [{
+                data: [3000,7000,12000,9000,14500],
+                borderColor: '#7c3aed',
+                backgroundColor: 'rgba(124,58,237,0.10)',
+                fill: true,
+                tension: 0.4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                y: { beginAtZero: true }
+            }
+        }
+    });
+}
+
+// =========================
+// INIT
+// =========================
+document.addEventListener("DOMContentLoaded", function () {
+    iniciarGrafico();
+    iniciarGraficoFinanceiro();
+});
+
+// Financeiro
+
+fetch("/clinica/grafico/faturamento/")
+.then(res => res.json())
+.then(data => {
+
+    const ctx = document.getElementById("graficoFinanceiro");
+
+    new Chart(ctx, {
+        type: "line",
+        data: {
+            labels: data.meses,
+            datasets: [{
+                label: "Faturamento (R$)",
+                data: data.valores,
+                borderWidth: 3,
+                tension: 0.4,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    display: true
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+
+});
+
 </script>
 
 {% endblock %}

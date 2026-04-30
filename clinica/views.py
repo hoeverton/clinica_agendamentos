@@ -10,6 +10,7 @@ from django.views.generic import TemplateView
 from django.http import HttpResponse
 from django.contrib import messages
 from datetime import datetime
+from collections import OrderedDict
 from django.utils import timezone
 from django.contrib.auth.mixins import LoginRequiredMixin,PermissionRequiredMixin
 from django.shortcuts import render, redirect
@@ -20,12 +21,15 @@ from django.contrib import messages
 from django.db.models import Count
 from django.db.models.functions import TruncMonth
 from django.shortcuts import get_object_or_404
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 from agendamentos.models import Profissional, Servico
 from django.views.decorators.http import require_POST
 from agendamentos.models import Paciente,Prontuario
 from django.db.models import Q
+from django.views.decorators.csrf import csrf_exempt
 from .forms import ProfissionalForm, ServicoForm
+from django.http import JsonResponse
+import json
 from clinica.services.plano_service import PlanoService
 from agendamentos.utils import (
     pode_enviar_whatsapp,
@@ -126,6 +130,13 @@ class ClinicaDashboardView(LoginRequiredMixin, TemplateView):
             data__year=hoje.year
         ).count()
 
+        faturamento = sum(
+            a.servico.preco for a in Agendamento.objects.filter(
+                clinica=clinica,
+                status="concluido"
+            ) if a.servico and hasattr(a.servico, "preco")
+        )
+
         context.update({
             "clinica": clinica,
             "agendamentos": agendamentos,
@@ -137,8 +148,10 @@ class ClinicaDashboardView(LoginRequiredMixin, TemplateView):
             "whatsapp_usados": whatsapp_usados,
             "total_pacientes": total_pacientes,
             "servicos_mes": servicos_mes,
+            "faturamento": faturamento,
             
         })
+        
 
         return context
 
@@ -1132,3 +1145,104 @@ def escolher_plano(request, plano_id):
 
 def teste_tailwind(request):
     return render(request, 'clinica/teste.html')
+
+
+@csrf_exempt
+def atualizar_status(request, agendamento_id):
+    if request.method == "POST":
+        data = json.loads(request.body)
+
+        clinica = get_clinica(request)
+
+        ag = Agendamento.objects.get(
+            id=agendamento_id,
+            clinica=clinica
+        )
+
+        ag.status = data.get("status")
+        ag.save()
+
+        return JsonResponse({"ok": True})
+
+    return JsonResponse({"erro": "metodo invalido"}, status=400)
+
+def dados_grafico(request):
+    clinica = get_clinica(request)
+
+    ultimo = Agendamento.objects.filter(
+        clinica=clinica
+    ).order_by("-data").first()
+
+    if not ultimo:
+        return JsonResponse({
+            "dias": [],
+            "confirmados": [],
+            "cancelados": [],
+            "faltas": [],
+            "faturamento": []
+        })
+
+    hoje = ultimo.data
+
+    dias = []
+    confirmados = []
+    cancelados = []
+    faltas = []
+    faturamento = []
+
+    for i in range(6, -1, -1):
+        dia = hoje - timedelta(days=i)
+
+        dias.append(dia.strftime("%d/%m"))
+
+        ags = Agendamento.objects.filter(
+            clinica=clinica,
+            data=dia
+        )
+
+        confirmados.append(ags.filter(status="confirmado").count())
+        cancelados.append(ags.filter(status="cancelado").count())
+        faltas.append(ags.filter(status="faltou").count())
+
+        total = sum(
+            a.servico.preco for a in ags.filter(status="concluido")
+        )
+
+        faturamento.append(float(total) if total else 0)
+
+    return JsonResponse({
+        "dias": dias,
+        "confirmados": confirmados,
+        "cancelados": cancelados,
+        "faltas": faltas,
+        "faturamento": faturamento
+    })
+
+def grafico_faturamento(request):
+    clinica = get_clinica(request)
+
+    ags = Agendamento.objects.filter(
+        clinica=clinica,
+        status="concluido"
+    )
+
+    dados = {}
+
+    for ag in ags:
+        chave = ag.data.strftime("%m/%Y")
+
+        if chave not in dados:
+            dados[chave] = 0
+
+        if ag.servico and hasattr(ag.servico, "preco"):
+            dados[chave] += float(ag.servico.preco)
+
+    # ordenar por data
+    dados_ordenados = OrderedDict(
+        sorted(dados.items(), key=lambda x: x[0])
+    )
+
+    return JsonResponse({
+        "meses": list(dados_ordenados.keys()),
+        "valores": list(dados_ordenados.values())
+    })

@@ -1,0 +1,94 @@
+{% extends "clinica/base.html" %}
+{% block content %}
+
+<div class="max-w-3xl mx-auto bg-white p-8 rounded-2xl shadow">
+
+    <h2 class="text-2xl font-bold mb-6">➕ Novo Agendamento</h2>
+
+    <form method="post" class="space-y-4">
+        {% csrf_token %}
+
+        <input type="hidden" name="paciente_id" id="paciente_id">
+
+        <input type="text" name="nome" id="nome" placeholder="Nome do paciente"
+               class="w-full border px-4 py-3 rounded-xl">
+
+        <input type="text" name="telefone" id="telefone" placeholder="Telefone"
+               class="w-full border px-4 py-3 rounded-xl">
+
+        <select name="profissional" id="profissional"
+                class="w-full border px-4 py-3 rounded-xl">
+            <option value="">Selecione o profissional</option>
+            {% for p in profissionais %}
+                <option value="{{ p.id }}">{{ p.nome }}</option>
+            {% endfor %}
+        </select>
+
+        <select name="servico"
+                class="w-full border px-4 py-3 rounded-xl">
+            {% for s in servicos %}
+                <option value="{{ s.id }}">{{ s.nome }}</option>
+            {% endfor %}
+        </select>
+
+        <!-- DATA -->
+        <input type="text" id="data" name="data"
+               placeholder="Selecione uma data"
+               class="w-full border px-4 py-3 rounded-xl">
+
+        <!-- HORÁRIO -->
+        <select name="horario" id="horario"
+                class="w-full border px-4 py-3 rounded-xl">
+            <option value="">Selecione o horário</option>
+        </select>
+
+        <button class="w-full bg-violet-600 text-white py-3 rounded-xl">
+            💾 Salvar Agendamento
+        </button>
+
+    </form>
+
+</div>
+
+<!-- FLATPICKR -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.js"></script>
+
+<script>
+const datasDisponiveis = {{ datas_disponiveis|safe }};
+
+flatpickr("#data", {
+    dateFormat: "Y-m-d",
+    enable: datasDisponiveis,
+    defaultDate: datasDisponiveis[0]  // 🔥 ISSO AQUI RESOLVE
+});
+
+// =======================
+// ⏰ CARREGAR HORÁRIOS
+// =======================
+document.getElementById("data").addEventListener("change", carregarHorarios);
+document.getElementById("profissional").addEventListener("change", carregarHorarios);
+
+function carregarHorarios() {
+    const data = document.getElementById("data").value;
+    const profissional = document.getElementById("profissional").value;
+
+    if (!data || !profissional) return;
+
+    fetch(`/clinica/agendamento/horarios/?data=${data}&profissional=${profissional}`)
+        .then(res => res.json())
+        .then(data => {
+            const select = document.getElementById("horario");
+            select.innerHTML = "";
+
+            data.horarios.forEach(h => {
+                const opt = document.createElement("option");
+                opt.value = h;
+                opt.text = h;
+                select.appendChild(opt);
+            });
+        });
+}
+</script>
+
+{% endblock %}

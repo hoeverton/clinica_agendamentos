@@ -1,6 +1,6 @@
 from django.urls import path, include
-from .views import ClinicaLoginView, clinica_logout, disponibilidade_create, disponibilidade_list, disponibilidade_delete, disponibilidade_edit, agendamento_delete, agendamento_edit, minha_conta,profissional_create,servico_create, profissional_update, servico_update, servico_list, profissional_list, servico_delete, profissional_delete, agenda_semana,prontuario_paciente,prontuario_busca,pagina_conectar_whatsapp
-from clinica.views import ClinicaDashboardView, relatorio_agendamentos_csv, relatorio_agendamentos_pdf, relatorio_agendamentos_html, planos,atualizar_status, dados_grafico, grafico_faturamento
+from .views import ClinicaLoginView, clinica_logout, disponibilidade_create, disponibilidade_list, disponibilidade_delete, disponibilidade_edit, agendamento_delete, agendamento_edit, minha_conta,profissional_create,servico_create, profissional_update, servico_update, servico_list, profissional_list, servico_delete, profissional_delete, agenda_semana,prontuario_paciente,prontuario_busca,pagina_conectar_whatsapp, buscar_pacientes,horarios_disponiveis, agenda_completa
+from clinica.views import ClinicaDashboardView, relatorio_agendamentos_csv, relatorio_agendamentos_pdf, relatorio_agendamentos_html, planos,atualizar_status, dados_grafico, grafico_faturamento, agendamento_create
 from .views import teste_tailwind
 
 
@@ -37,5 +37,9 @@ urlpatterns = [
     path('agendamento/<int:agendamento_id>/status/',atualizar_status),
     path("grafico/dados/", dados_grafico, name="dados_grafico"),
     path("grafico/faturamento/", grafico_faturamento, name="grafico_faturamento"),
+    path("agendamento/novo/", agendamento_create, name="agendamento_create"),
+    path("pacientes/buscar/", buscar_pacientes, name="buscar_pacientes"),    
+    path("agendamento/horarios/", horarios_disponiveis, name="horarios_disponiveis"),
+    path("agenda/completa/", agenda_completa, name="agenda_completa"),
     
 ]

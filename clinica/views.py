@@ -1246,3 +1246,183 @@ def grafico_faturamento(request):
         "meses": list(dados_ordenados.keys()),
         "valores": list(dados_ordenados.values())
     })
+
+
+@login_required
+def buscar_pacientes(request):
+    termo = request.GET.get("q", "")
+    clinica = get_clinica(request)
+
+    pacientes = Paciente.objects.filter(
+        clinica=clinica,
+        nome__icontains=termo
+    )[:5]
+
+    data = [
+        {"id": p.id, "nome": p.nome, "telefone": p.telefone}
+        for p in pacientes
+    ]
+
+    return JsonResponse(data, safe=False)
+
+
+@login_required
+def agendamento_create(request):
+    clinica = get_clinica(request)
+
+    if not clinica:
+        return redirect("clinica_login")
+
+    hoje = date.today()
+    datas_disponiveis = []
+
+    profissionais = Profissional.objects.filter(clinica=clinica)
+
+    for i in range(30):
+        dia = hoje + timedelta(days=i)
+        dia_semana = dia.weekday()
+
+        for profissional in profissionais:
+
+            disponibilidades = Disponibilidade.objects.filter(
+                clinica=clinica,
+                profissional=profissional,
+                dia_semana=dia_semana
+            )
+
+            if not disponibilidades:
+                continue
+
+            agendamentos = Agendamento.objects.filter(
+                clinica=clinica,
+                profissional=profissional,
+                data=dia
+            )
+
+            tem_horario_livre = False
+
+            for d in disponibilidades:
+                hora = d.hora_inicio
+
+                while hora < d.hora_fim:
+                    conflito = any(ag.horario == hora for ag in agendamentos)
+
+                    if not conflito:
+                        tem_horario_livre = True
+                        break
+
+                    hora = (
+                        datetime.combine(date.today(), hora)
+                        + timedelta(minutes=30)
+                    ).time()
+
+                if tem_horario_livre:
+                    break
+
+            if tem_horario_livre:
+                datas_disponiveis.append(dia.strftime("%Y-%m-%d"))
+                break
+
+    # =========================
+    # 💾 SALVAR
+    # =========================
+    if request.method == "POST":
+        paciente_id = request.POST.get("paciente_id")
+        nome = request.POST.get("nome")
+        telefone = request.POST.get("telefone")
+
+        if not paciente_id:
+            paciente = Paciente.objects.create(
+                clinica=clinica,
+                nome=nome,
+                telefone=telefone
+            )
+        else:
+            paciente = Paciente.objects.get(id=paciente_id)
+
+        Agendamento.objects.create(
+            clinica=clinica,
+            paciente=paciente,
+            profissional_id=request.POST.get("profissional"),
+            servico_id=request.POST.get("servico"),
+            data=request.POST.get("data"),
+            horario=request.POST.get("horario"),
+            status="pendente"
+        )
+
+        return redirect("clinica_dashboard")
+
+    # ✅ ESSE RETURN É O MAIS IMPORTANTE
+    return render(request, "clinica/agendamento_create.html", {
+        "pacientes": Paciente.objects.filter(clinica=clinica),
+        "profissionais": profissionais,
+        "servicos": Servico.objects.filter(clinica=clinica),
+        "datas_disponiveis": json.dumps(datas_disponiveis)
+    })
+
+# =========================
+# ⏰ HORÁRIOS (AJAX)
+# =========================
+@login_required
+def horarios_disponiveis(request):
+    clinica = get_clinica(request)
+
+    data = request.GET.get("data")
+    profissional_id = request.GET.get("profissional")
+
+    if not data or not profissional_id:
+        return JsonResponse({"horarios": []})
+
+    data_obj = datetime.strptime(data, "%Y-%m-%d").date()
+    dia_semana = data_obj.weekday()
+
+    disponibilidades = Disponibilidade.objects.filter(
+        clinica=clinica,
+        profissional_id=profissional_id,
+        dia_semana=dia_semana
+    )
+
+    agendamentos = Agendamento.objects.filter(
+        clinica=clinica,
+        profissional_id=profissional_id,
+        data=data
+    )
+
+    horarios = []
+
+    for d in disponibilidades:
+        hora = d.hora_inicio
+
+        while hora < d.hora_fim:
+            conflito = False
+
+            for ag in agendamentos:
+                if ag.horario == hora:
+                    conflito = True
+                    break
+
+            if not conflito:
+                horarios.append(hora.strftime("%H:%M"))
+
+            hora = (datetime.combine(date.today(), hora) + timedelta(minutes=30)).time()
+
+    return JsonResponse({"horarios": horarios})
+
+@login_required
+def agenda_completa(request):
+    clinica = get_clinica(request)
+
+    if not clinica:
+        return redirect("clinica_login")
+
+    agendamentos = Agendamento.objects.filter(
+        clinica=clinica
+    ).select_related(
+        "paciente",
+        "profissional",
+        "servico"
+    ).order_by("-data", "-horario")
+
+    return render(request, "clinica/agenda_completa.html", {
+        "agendamentos": agendamentos
+    })

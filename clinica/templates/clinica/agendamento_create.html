@@ -58,11 +58,14 @@
 const datasDisponiveis = {{ datas_disponiveis|safe }};
 
 flatpickr("#data", {
-    dateFormat: "Y-m-d",
+    dateFormat: "Y-m-d",        // formato pro backend (Django)
+    altInput: true,
+    altFormat: "d/m/Y",         // formato BR visível
+    locale: "pt-BR",            // 🔥 melhor que "pt"
     enable: datasDisponiveis,
-    defaultDate: datasDisponiveis[0]  // 🔥 ISSO AQUI RESOLVE
-});
 
+    defaultDate: datasDisponiveis.length ? datasDisponiveis[0] : null
+});
 // =======================
 // ⏰ CARREGAR HORÁRIOS
 // =======================

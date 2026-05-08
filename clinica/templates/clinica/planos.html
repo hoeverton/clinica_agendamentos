@@ -100,18 +100,23 @@
                     class="w-full bg-violet-600 text-white py-3 rounded-xl font-semibold cursor-default">
                     ⭐ Plano Atual
                 </button>
+                <a
+    href="{% url 'gerar_pagamento' plano.id %}"
+    class="mt-3 block w-full text-center bg-violet-600 hover:bg-violet-700 text-white py-3 rounded-xl font-semibold transition">
+
+    Gerar Pix
+
+</a>
 
             {% else %}
 
-                <button
-                    disabled
-                    class="w-full bg-slate-200 text-slate-600 py-3 rounded-xl font-semibold">
-                    Selecionar Plano
-                </button>
+                   <a
+                        href="{% url 'gerar_pagamento' plano.id %}"
+                        class="block w-full text-center bg-violet-600 hover:bg-violet-700 text-white py-3 rounded-xl font-semibold transition">
 
-                <p class="text-center text-sm text-slate-400 mt-3">
-                    Disponível em breve
-                </p>
+                        Selecionar Plano
+
+                    </a> 
 
             {% endif %}
 

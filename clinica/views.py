@@ -20,17 +20,24 @@ from agendamentos.models import WhatsappLog, Agendamento
 from django.contrib import messages
 from django.db.models import Count
 from django.db.models.functions import TruncMonth
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404, render
 from datetime import datetime, timedelta, date
 from agendamentos.models import Profissional, Servico
 from django.views.decorators.http import require_POST
-from agendamentos.models import Paciente,Prontuario
+from agendamentos.models import Paciente,Prontuario,Plano
 from django.db.models import Q
 from django.views.decorators.csrf import csrf_exempt
 from .forms import ProfissionalForm, ServicoForm
 from django.http import JsonResponse
 import json
 from clinica.services.plano_service import PlanoService
+from django.shortcuts import get_object_or_404, render
+from .models import Plano, Assinatura
+import mercadopago
+import qrcode
+import base64
+
+from io import BytesIO
 from agendamentos.utils import (
     pode_enviar_whatsapp,
     enviar_whatsapp,
@@ -1426,3 +1433,76 @@ def agenda_completa(request):
     return render(request, "clinica/agenda_completa.html", {
         "agendamentos": agendamentos
     })
+
+@login_required
+def gerar_pagamento(request, id):
+
+    plano = get_object_or_404(Plano, id=id)
+
+    sdk = mercadopago.SDK(
+        "APP_USR-5167071571525967-050815-ce63e4add0cf57f8e78de8c02520c814-1143987792"
+    )
+
+    assinatura = Assinatura.objects.create(
+        clinica=request.user.clinica,
+        plano=plano,
+        valor=plano.preco
+    )
+
+    payment_data = {
+        "transaction_amount": float(assinatura.valor),
+
+        "description": f"Plano {plano.nome}",
+
+        "payment_method_id": "pix",
+
+        "payer": {
+            "email": "hoeverton.ziwert@gmail.com"
+        }
+    }
+
+    payment_response = sdk.payment().create(payment_data)
+
+    payment = payment_response["response"]
+    
+    codigo_pix = payment[
+        "point_of_interaction"
+    ]["transaction_data"]["qr_code"].strip()
+
+    qr = qrcode.QRCode(
+    version=1,
+    error_correction=qrcode.constants.ERROR_CORRECT_L,
+    box_size=10,
+    border=4,
+    )
+
+    qr.add_data(codigo_pix)
+
+    qr.make(fit=True)
+
+    img = qr.make_image(fill_color="black", back_color="white")
+    
+
+    buffer = BytesIO()
+
+    img.save(buffer, format='PNG')
+
+    qr_code_base64 = base64.b64encode(
+        buffer.getvalue()
+    ).decode()
+
+    assinatura.codigo_pix = codigo_pix
+
+    assinatura.save()
+
+    context = {
+        'assinatura': assinatura,
+        'codigo_pix': codigo_pix,
+        'qr_code_base64': qr_code_base64
+    }
+
+    return render(
+        request,
+        'clinica/pagamento.html',
+        context
+    )

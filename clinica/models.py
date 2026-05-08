@@ -1,5 +1,6 @@
 from django.db import models
 
+
 class Plano(models.Model):
     nome = models.CharField(max_length=50)
 
@@ -22,4 +23,42 @@ class Plano(models.Model):
     def __str__(self):
         return self.nome
 
+class Assinatura(models.Model):
+    STATUS_CHOICES = (
+        ('pendente', 'Pendente'),
+        ('ativo', 'Ativo'),
+        ('cancelado', 'Cancelado'),
+    )
 
+    clinica = models.ForeignKey(
+    'agendamentos.Clinica',
+    on_delete=models.CASCADE
+)
+
+    plano = models.ForeignKey(
+    'clinica.Plano',
+    on_delete=models.CASCADE
+)
+
+    valor = models.DecimalField(
+        max_digits=8,
+        decimal_places=2
+    )
+
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default='pendente'
+    )
+
+    codigo_pix = models.TextField(
+        blank=True,
+        null=True
+    )
+
+    criado_em = models.DateTimeField(
+        auto_now_add=True
+    )
+
+    def __str__(self):
+        return f'{self.clinica} - {self.plano.nome}'

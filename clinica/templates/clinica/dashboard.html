@@ -20,29 +20,31 @@
     <!-- DIREITA -->
     <div class="flex flex-wrap items-center gap-2">
 
-        <input 
-            type="text" 
-            value="https://agendafacilodonto.com.br/agendamentos/{{ clinica.slug }}" 
-            readonly
-            class="hidden md:block border px-3 py-2 rounded-lg text-sm bg-gray-100"
-        />
+    <input 
+        id="link"
+        type="text" 
+        value="https://agendafacilodonto.com.br/agendamentos/{{ clinica.slug }}" 
+        readonly
+        class="hidden md:block border px-3 py-2 rounded-lg text-sm bg-gray-100"
+    />
 
-        <button onclick="copiarLink()"
-            class="h-[42px] px-5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-semibold flex items-center justify-center">
-            📎 Copiar
-        </button>
+    <button 
+        onclick="copiarLink()"
+        class="h-[42px] px-5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-semibold flex items-center justify-center">
+        📎 Copiar
+    </button>
 
-        <a href="{% url 'agenda_semana' %}"
+    <a href="{% url 'agenda_semana' %}"
         class="px-5 py-2 text-sm h-10 min-w-[160px] bg-violet-600 hover:bg-violet-700 text-white rounded-xl font-semibold flex items-center justify-center">
-            Agenda da Semana
-        </a>
+        Agenda da Semana
+    </a>
 
-        <a href="{% url 'agenda_completa' %}"
+    <a href="{% url 'agenda_completa' %}"
         class="px-5 py-2 text-sm h-10 min-w-[160px] bg-slate-700 hover:bg-slate-800 text-white rounded-xl font-semibold flex items-center justify-center">
-            Agenda Completa
-        </a>
+        Agenda Completa
+    </a>
 
-    </div>
+</div>
 
 </div>
 
@@ -275,10 +277,13 @@
 // COPIAR LINK
 // =========================
 function copiarLink() {
+
     let texto = document.getElementById("link");
-    texto.select();
-    document.execCommand("copy");
+
+    navigator.clipboard.writeText(texto.value);
+
     alert("Link copiado!");
+
 }
 
 // =========================

@@ -17,6 +17,8 @@ class Clinica(models.Model):
 
     endereco = models.CharField(max_length=200, blank=True, null=True)
     telefone = models.CharField(max_length=20, blank=True, null=True)
+    ativo = models.BooleanField(default=False)  # NOVO CAMPO
+
 
     limite_mensagens = models.IntegerField(default=0)
     whatsapp_instance = models.CharField(max_length=100,null=True,blank=True)

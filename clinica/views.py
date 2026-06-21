@@ -63,10 +63,35 @@ class ClinicaLoginView(View):
         user = authenticate(request, username=username, password=password)
 
         if user:
+
+            try:
+                clinica = user.usuarioclinica.clinica
+
+                if not clinica.ativo:
+                    return render(
+                        request,
+                        self.template_name,
+                        {
+                            "error": (
+                                "Sua conta está aguardando aprovação. "
+                                "Entre em contato com o suporte."
+                            )
+                        }
+                    )
+
+            except:
+                pass
+
             login(request, user)
             return redirect("clinica_dashboard")
 
-        return render(request, self.template_name, {"error": "Credenciais inválidas"})
+        return render(
+            request,
+            self.template_name,
+            {
+                "error": "Credenciais inválidas"
+            }
+        )
 
 class ClinicaDashboardView(LoginRequiredMixin, TemplateView):
     template_name = "clinica/dashboard.html"

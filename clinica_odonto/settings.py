@@ -150,5 +150,8 @@ EMAIL_HOST_USER = 'agendafacilodonto@gmail.com'
 EMAIL_HOST_PASSWORD = 'nyml fhgp rref klgy'
 
 DEFAULT_FROM_EMAIL = 'Agenda Fácil Odonto <agendafacilodonto@gmail.com>'
+TURNSTILE_SECRET_KEY = "0x4AAAAAADjogtaKE2xiXUT2Tc-Y1GPWzvA"
+
+CLOUDFLARE_SECRET_KEY = "0x4AAAAAADoxNYSwFTk4JwKPIARLrxJWChU"
 
 

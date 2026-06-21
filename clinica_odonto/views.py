@@ -7,6 +7,8 @@ from django.utils.text import slugify
 from django.core.mail import send_mail
 from django.core.mail import EmailMultiAlternatives
 import uuid
+import requests
+from django.conf import settings
 
 def home(request):
     clinicas = Clinica.objects.all()
@@ -17,6 +19,34 @@ def demo(request):
 
 def cadastro(request):
     if request.method == "POST":
+        token = request.POST.get("cf-turnstile-response")
+
+        resultado = requests.post(
+            "https://challenges.cloudflare.com/turnstile/v0/siteverify",
+            data={
+                "secret": settings.CLOUDFLARE_SECRET_KEY,
+                "response": token,
+            }
+        ).json()
+
+        try:
+            resultado = requests.post(
+                "https://challenges.cloudflare.com/turnstile/v0/siteverify",
+                data={
+                    "secret": settings.CLOUDFLARE_SECRET_KEY,
+                    "response": token,
+                }
+            ).json()
+
+            if not resultado.get("success"):
+                return render(request, "cadastro.html", {
+                    "erro": "Falha na verificação de segurança."
+                })
+
+        except Exception:
+            return render(request, "cadastro.html", {
+                "erro": "Erro ao validar segurança."
+            })
         nome = request.POST.get("nome")
         email = request.POST.get("email").strip()
         senha = request.POST.get("senha")

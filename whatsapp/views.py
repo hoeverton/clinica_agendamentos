@@ -168,6 +168,10 @@ def qr_code_whatsapp(request):
 
     print("STATUS:", response.status_code)
     print("TEXTO:", response.text)
+    print("URL:", url)
+    print("HEADERS:", headers)
+    print("STATUS:", response.status_code)
+    print("RESPONSE:", response.text)
 
     try:
         data = response.json()

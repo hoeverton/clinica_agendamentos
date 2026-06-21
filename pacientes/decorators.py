@@ -3,7 +3,7 @@ from django.shortcuts import redirect
 
 
 
-def paciente_logado(view_func):
+"""def paciente_logado(view_func):
     print("******** DEF PACIENTE_LOGADO DECORATRS ******************")
 
     @wraps(view_func)
@@ -15,4 +15,4 @@ def paciente_logado(view_func):
         # repassa TODOS argumentos para a view
         return view_func(request, *args, **kwargs)
 
-    return wrapper
+    return wrapper"""

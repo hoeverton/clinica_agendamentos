@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect
 from django.utils import timezone
 from datetime import timedelta
 import re
-from .decorators import paciente_logado
+#from .decorators import paciente_logado
 from agendamentos.utils import normalizar_telefone
 from agendamentos.models import Paciente, Agendamento, Clinica
 from functools import wraps
@@ -168,7 +168,7 @@ def validar_codigo(request):
 
 
 
-@paciente_logado
+#@paciente_logado
 def dashboard_paciente(request):
 
     print("+++++++ Def dashboard paciente ++++++++")
@@ -221,7 +221,7 @@ def dashboard_paciente(request):
             "agendamentos": agendamentos,
         }
     )
-@paciente_logado
+#@paciente_logado
 def agendar_logado(request, clinica_slug):
     print("########################")
     print("  DEF AGENDAR LOGADO")
